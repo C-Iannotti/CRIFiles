@@ -9,7 +9,6 @@ const URL = process.env.REACT_APP_PROTOCOL
 class File extends React.Component {
     constructor(props) {
         super(props)
-        this.state
         axios({
             method: "get",
             url: URL

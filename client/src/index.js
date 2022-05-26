@@ -40,8 +40,6 @@ if (window.indexedDB) {
     }
 }
 
-console.log(db)
-
 root.render(
     <BrowserRouter>
         <Routes>

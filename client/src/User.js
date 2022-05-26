@@ -21,6 +21,8 @@ class User extends React.Component {
     handleUpload() {
         let file = document.getElementById("file-upload").files[0];
         let getUserFiles = this.getUserFiles;
+        console.log("Here");
+        console.log(typeof(file));
 
         axios({
             method: "post",
