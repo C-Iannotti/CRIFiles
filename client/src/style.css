@@ -1,0 +1,40 @@
+* {
+    font-size: 15px;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.error-message {
+    color: red;
+}
+
+.login-button {
+    background-color: darkslateblue;
+}
+
+.register-button {
+    background-color: crimson;
+}
+
+.upload-button {
+    background-color: cornflowerblue;
+}
+
+.user-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.upload-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
