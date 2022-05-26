@@ -2,3 +2,5 @@ node_modules
 package-lock.json
 .env
 file-sharer-website.code-workspace
+public
+source
