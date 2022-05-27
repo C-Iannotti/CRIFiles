@@ -1,6 +1,6 @@
 import React from "react";
 import axios from "axios";
-import { withRouter } from "./withRouter";
+import { withWrapper } from "./comonentWrapper";
 import "./style.css";
 
 const URL = process.env.REACT_APP_PROTOCOL
@@ -82,4 +82,4 @@ class Home extends React.Component {
     }
 }
 
-export default withRouter(Home);
+export default withWrapper(Home);

@@ -1,7 +1,7 @@
 import React from "react";
 import axios from "axios";
 import "./style.css";
-import { withRouter } from "./withRouter";
+import { withWrapper } from "./comonentWrapper";
 
 const URL = process.env.REACT_APP_PROTOCOL
     + process.env.REACT_APP_DOMAIN;
@@ -90,4 +90,4 @@ class User extends React.Component {
     }
 }
 
-export default withRouter(User)
+export default withWrapper(User)
