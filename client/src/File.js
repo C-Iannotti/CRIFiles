@@ -17,9 +17,32 @@ class File extends React.Component {
                  + "/"
                  + this.props.params.fileId,
             withCredentials: true,
+            responseType: "blob"
             })
             .then(res => {
-                console.log(res.data)
+                console.log(res)
+                this.props.useDatabase(db => {
+                    let transaction = db.transaction([DB_STORE_NAME], "readwrite");
+                    transaction.oncomplete = event => {
+                        console.log(event.target.result)
+                    };
+                    transaction.onerror = event => {
+                        console.error("Unable to get file from server: " + event.target.errorCode);
+                    };
+                    let objectStore = transaction.objectStore(DB_STORE_NAME);
+                    let request = objectStore.add({
+                        fileId: this.props.params.fileId,
+                        filename: res.headers["filename"],
+                        mimetype: res.headers["content-type"],
+                        blob: res.data
+                    });
+                    request.onsuccess = event => {
+                        console.log(event.target.result)
+                    };
+                    request.onerror = event => {
+                        console.error("Unable to locally store file: " + event.target.errorCode);
+                    };
+                })
             })
             .catch(err => {
                 console.error(err);

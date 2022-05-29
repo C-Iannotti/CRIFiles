@@ -17,7 +17,7 @@ export const withWrapper = (Component) => {
         navigate={navigate}
         {...props}
         params={useParams()}
-        ueDatabase={useDatabase}
+        useDatabase={useDatabase}
         />
     );
   };
