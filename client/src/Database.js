@@ -23,10 +23,9 @@ function useDatabase(userFunction) {
         }
         request.onupgradeneeded = event => {
             let store = event.currentTarget.result.createObjectStore(
-                DB_STORE_NAME, { keyPath: "id", autoIncrement: true }
+                DB_STORE_NAME, { keyPath: "fileId" }
             );
 
-            store.createIndex("fileId", "fileId", { unique: true });
             store.createIndex("filename", "filename", { unique: false });
             store.createIndex("mimetype", "mimetype", { unique: false });
             store.createIndex("blob", "blob", { unique: false });

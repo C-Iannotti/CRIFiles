@@ -70,7 +70,6 @@ function main(app, database) {
         multer( { dest: process.env.DATA_PATH}).single("userFile"),
         function(req, res) {
             res.status(204);
-            console.log(req.file);
             try {
                 const stream = fileBucket.openUploadStream(req.file.filename, {
                     chunkSizeBytes: 1048576,
@@ -83,7 +82,8 @@ function main(app, database) {
                         file: stream.id,
                         fileName: req.file.originalname,
                         privacy: "public",
-                        validUsers: []
+                        validUsers: [],
+                        size: req.file.size
                     },
                     function(err, doc) {
                         if (err) res.status(400);
@@ -126,7 +126,6 @@ function main(app, database) {
                 else if (!doc) res.status(500).send();
                 else {
                     res.append("Content-Type", doc.metadata.mimetype);
-                    console.log(doc.metadata.name);
                     res.append("filename", doc.metadata.name);
                     fileBucket.openDownloadStream(MongoDB.ObjectId(req.params.fileId))
                         .pipe(res);
