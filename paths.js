@@ -32,8 +32,7 @@ function main(app, database) {
                     username: username
                 },
                 function(err, user) {
-                    if (err) res.status(400).send();
-                    else if (user) res.status(400).send();
+                    if (err || user) res.status(400).send();
                     else {
                         const salt = bcrypt.genSaltSync(SALT_ROUNDS);
                         const hash = bcrypt.hashSync(password, salt);
@@ -90,7 +89,7 @@ function main(app, database) {
                     }
                 )
             } catch(e) {
-                console.error(e)
+                console.error(e);
                 res.status(400);
             } finally {
                 fs.rm(process.env.DATA_PATH + req.file.filename, err => {
@@ -122,8 +121,7 @@ function main(app, database) {
 
             const cursor = fileBucket.find({ _id: MongoDB.ObjectId(req.params.fileId) });
             cursor.next((err, doc) => {
-                if (err) res.status(500).send();
-                else if (!doc) res.status(500).send();
+                if (err || !doc) res.status(500).send();
                 else {
                     res.append("Content-Type", doc.metadata.mimetype);
                     res.append("filename", doc.metadata.name);
@@ -131,6 +129,52 @@ function main(app, database) {
                         .pipe(res);
                 }
             })
+        }
+    );
+
+    //API for deleting a single file
+    app.delete(process.env.DELETE_FILE_PATH + "/:fileId",
+        ensureAuthenticated(),
+        function(req, res) {
+            fileCollection.findOneAndDelete({
+                    user: MongoDB.ObjectId(req.user._id),
+                    file: MongoDB.ObjectId(req.params.fileId)
+                },
+                function(err, doc) {
+                    console.log(doc)
+                    if (err || doc === null) res.status(400).send();
+                    else {
+                        fileBucket.delete(doc.value.file);
+                        fileCollection.delete
+                        res.status(204).send();
+                    }
+                }
+            );
+        }
+    );
+
+    //API for getting a file's meta data
+    app.get(process.env.RETRIEVE_METADATA_PATH + "/:fileId",
+        ensureAuthenticated(),
+        function(req, res) {
+            console.log(req.params.fileId)
+            fileCollection.findOne({
+                    file: MongoDB.ObjectId(req.params.fileId)
+                },
+                function(err, doc) {
+                    if (err || doc === null) res.status(500).send();
+                    else {
+                        res.json({
+                            userId: doc.user,
+                            fileId: doc.file,
+                            filename: doc.fileName,
+                            privacy: doc.privacy,
+                            validUsers: doc.validUsers,
+                            size: doc.size
+                        });
+                    }
+                }
+            );
         }
     );
 }

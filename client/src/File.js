@@ -16,6 +16,19 @@ class File extends React.Component {
         this.displayFile = this.displayFile.bind(this);
         this.downloadFile = this.downloadFile.bind(this);
         this.handleDownload = this.handleDownload.bind(this);
+        this.deleteFile = this.deleteFile.bind(this);
+
+        axios({
+            method: "get",
+            url: SERVER_URL
+                 + process.env.REACT_APP_RETRIEVE_METADATA_PATH
+                 + "/"
+                 + this.props.params.fileId,
+            withCredentials: true
+            })
+            .then(res => {
+                console.log(res.data)
+            });
     }
 
     displayFile() {
@@ -105,12 +118,30 @@ class File extends React.Component {
         a.remove();
     }
 
+    deleteFile() {
+        axios({
+            method: "delete",
+            url: SERVER_URL
+                 + process.env.REACT_APP_DELETE_FILE_PATH
+                 + "/"
+                 + this.props.params.fileId,
+            withCredentials: true
+            })
+            .then(res => {
+                if (res.status === 204) this.props.navigate(-1);
+                else {
+                    console.log("Unable to delete file")
+                }
+            });
+    }
+
     render() {
         return(
             <div>
                 <p>File Page</p>
                 <p><strong>{this.props.params.fileId}</strong></p>
                 <button type="button" id="download-button" className="download-button" onClick={this.handleDownload}>Download File</button>
+                <button type="button" id="delete-button" className="delete-button" onClick={this.deleteFile}>Delete File</button>
             </div>
         )
     }
