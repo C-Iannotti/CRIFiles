@@ -141,7 +141,6 @@ function main(app, database) {
                     file: MongoDB.ObjectId(req.params.fileId)
                 },
                 function(err, doc) {
-                    console.log(doc)
                     if (err || doc === null) res.status(400).send();
                     else {
                         fileBucket.delete(doc.value.file);

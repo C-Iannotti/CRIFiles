@@ -15,9 +15,14 @@ class File extends React.Component {
 
         this.displayFile = this.displayFile.bind(this);
         this.downloadFile = this.downloadFile.bind(this);
-        this.handleDownload = this.handleDownload.bind(this);
+        this.retrieveFile = this.retrieveFile.bind(this);
         this.deleteFile = this.deleteFile.bind(this);
+        this.checkFile = this.checkFile.bind(this);
 
+        this.checkFile();
+    }
+
+    checkFile() {
         axios({
             method: "get",
             url: SERVER_URL
@@ -27,33 +32,31 @@ class File extends React.Component {
             withCredentials: true
             })
             .then(res => {
-                console.log(res.data)
+                if (res.status === 500) {
+                    this.props.useDatabase(db => {
+                        let request = db.transaction([DB_STORE_NAME], "readwrite")
+                                        .objectStore(DB_STORE_NAME)
+                                        .delete(this.props.params.fileId);
+                        request.onerror = event => {
+                            console.error("Unable to delete local file: " + event.target.errorCode);
+                        }
+                        request.onsuccess = event => {
+                            console.log("Successfully deleted local file: " + event.target.result);
+                        }
+                    });
+                    this.props.navigate(-1);
+                }
+                else if (res.data.size <= process.env.REACT_APP_MAX_FILE_SIZE) {
+                    this.retrieveFile(this.downloadFile);
+                }
             });
     }
 
-    displayFile() {
+    retrieveFile(userFunction) {
         this.props.useDatabase(db => {
-            db.transaction(DB_STORE_NAME)
-                .objectStore(DB_STORE_NAME)
-                .get(this.props.params.fileId)
-                .onsuccess = event => {
-                    console.log(event.target.result);
-                }
-            db.close();
-        });
-    }
-    handleDownload() {
-        this.props.useDatabase(db => {
-            let transaction = db.transaction([DB_STORE_NAME], "readwrite");
-            transaction.oncomplete = event => {
-                console.log("Completed looking for file: " + event.target.result);
-            }
-            transaction.onerror = event => {
-                console.error("Unable to check database: " + event.target.errorCode);
-                db.close();
-            };
+            let objectStore = db.transaction(DB_STORE_NAME).objectStore(DB_STORE_NAME);
 
-            let req1 = transaction.objectStore(DB_STORE_NAME).openCursor(this.props.params.fileId);
+            let req1 = objectStore.openCursor(this.props.params.fileId);
             req1.onerror = event => {
                 console.error("Unable to check database for file: " + event.target.errorcode);
             }
@@ -94,28 +97,33 @@ class File extends React.Component {
                                 console.error("Unable to locally store file: " + event.target.errorCode);
                             };
 
-                            this.downloadFile(res.data, res.headers["filename"]);
+                            userFunction(res.data);
                         })
                         .catch(err => {
                             console.error(err);
                         });
                 }
                 else {
-                    this.downloadFile(cursor.value.blob, cursor.value.filename)
+                    console.log("Found local file");
+                    userFunction(cursor.value.blob);
                 }
             }
         });
     }
 
-    downloadFile(blob, name) {
+    downloadFile(blob) {
         let a = $("<a style='display: none;'/>");
         let url = window.URL.createObjectURL(blob);
         a.attr("href", url);
-        a.attr("download", name);
+        a.attr("download", this.props.params.fileId);
         $("body").append(a);
         a[0].click();
         window.URL.revokeObjectURL(url);
         a.remove();
+    }
+
+    displayFile(blob) {
+        console.log(blob);
     }
 
     deleteFile() {
@@ -136,11 +144,13 @@ class File extends React.Component {
     }
 
     render() {
+        let retrieveFile = this.retrieveFile;
+        let downloadFile = this.downloadFile;
         return(
             <div>
                 <p>File Page</p>
                 <p><strong>{this.props.params.fileId}</strong></p>
-                <button type="button" id="download-button" className="download-button" onClick={this.handleDownload}>Download File</button>
+                <button type="button" id="download-button" className="download-button" onClick={() => retrieveFile(downloadFile)}>Download File</button>
                 <button type="button" id="delete-button" className="delete-button" onClick={this.deleteFile}>Delete File</button>
             </div>
         )
