@@ -32,6 +32,8 @@ class File extends React.Component {
             withCredentials: true
             })
             .then(res => {
+                console.log(res.data.size, process.env.REACT_APP_MAX_FILE_SIZE)
+                console.log(res.data.size <= process.env.REACT_APP_MAX_FILE_SIZE)
                 if (res.status === 500) {
                     this.props.useDatabase(db => {
                         let request = db.transaction([DB_STORE_NAME], "readwrite")
@@ -46,8 +48,9 @@ class File extends React.Component {
                     });
                     this.props.navigate(-1);
                 }
-                else if (res.data.size <= process.env.REACT_APP_MAX_FILE_SIZE) {
-                    this.retrieveFile(this.downloadFile);
+                else if (res.data.size <= process.env.REACT_APP_MAX_FILE_SIZE * 100) {
+                    console.log("Made it here")
+                    this.retrieveFile(this.displayFile);
                 }
             });
     }
@@ -91,7 +94,6 @@ class File extends React.Component {
                             });
                             req2.onsuccess = event => {
                                 console.log("Added item: " + event.target.result);
-                                this.displayFile();
                             };
                             req2.onerror = event => {
                                 console.error("Unable to locally store file: " + event.target.errorCode);
@@ -123,7 +125,10 @@ class File extends React.Component {
     }
 
     displayFile(blob) {
-        console.log(blob);
+        console.log(JSON.parse(process.env.REACT_APP_SUPPORTED_FILES))
+        let url = window.URL.createObjectURL(blob);
+        let frame = $("#file-display")[0]
+        frame.contentWindow.location.replace(url);
     }
 
     deleteFile() {
@@ -144,14 +149,15 @@ class File extends React.Component {
     }
 
     render() {
-        let retrieveFile = this.retrieveFile;
-        let downloadFile = this.downloadFile;
         return(
             <div>
                 <p>File Page</p>
                 <p><strong>{this.props.params.fileId}</strong></p>
-                <button type="button" id="download-button" className="download-button" onClick={() => retrieveFile(downloadFile)}>Download File</button>
+                <iframe id="file-display" className="file-display" title="File Display" sandbox=""></iframe>
+                <br />
+                <button type="button" id="download-button" className="download-button" onClick={() => this.retrieveFile(this.downloadFile)}>Download File</button>
                 <button type="button" id="delete-button" className="delete-button" onClick={this.deleteFile}>Delete File</button>
+                <button type="button" id="display-button" className="display-button" onClick={() => this.retrieveFile(this.displayFile)}>Display File</button>
             </div>
         )
     }
