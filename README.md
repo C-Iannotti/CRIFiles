@@ -14,8 +14,9 @@ to download the file to their download folder from either the local database or 
 on if the user already has a local copy.
 ## Implementation
 This application uses Node to create both the front and back-end, and uses a .env file to instantiate
-variables (each variable seen in the code). The application also uses a built React app for the front-end,
-which can be done running npm run build in the client folder.
+variables (each variable seen in the code). After running npm install in both package.json areas,
+use npm run build in client folder to create React app and node server.js in the same directory
+as the server.js file.
 ## Plan
 * Change iframe to appropriate html tag for files (or none at all) to display file more appropriately
 * Allow the user to change permissions and add comments upon creationg or when accessing files they uploaded
