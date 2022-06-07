@@ -11,13 +11,14 @@ const DB_STORE_NAME = process.env.REACT_APP_IDB_STORE_NAME;
 class File extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {};
+        this.state = { metadata: null };
 
         this.displayFile = this.displayFile.bind(this);
         this.downloadFile = this.downloadFile.bind(this);
         this.retrieveFile = this.retrieveFile.bind(this);
         this.deleteFile = this.deleteFile.bind(this);
         this.checkFile = this.checkFile.bind(this);
+        this.updateFileMetadata = this.updateFileMetadata.bind(this);
 
         this.checkFile();
     }
@@ -32,8 +33,8 @@ class File extends React.Component {
             withCredentials: true
             })
             .then(res => {
-                console.log(res.data.size, process.env.REACT_APP_MAX_FILE_SIZE)
-                console.log(res.data.size <= process.env.REACT_APP_MAX_FILE_SIZE)
+                this.setState({ metadata: res.data});
+
                 if (res.status === 500) {
                     this.props.useDatabase(db => {
                         let request = db.transaction([DB_STORE_NAME], "readwrite")
@@ -48,8 +49,7 @@ class File extends React.Component {
                     });
                     this.props.navigate(-1);
                 }
-                else if (res.data.size <= process.env.REACT_APP_MAX_FILE_SIZE * 100) {
-                    console.log("Made it here")
+                else if (res.data.size <= process.env.REACT_APP_MAX_FILE_SIZE) {
                     this.retrieveFile(this.displayFile);
                 }
             });
@@ -125,10 +125,33 @@ class File extends React.Component {
     }
 
     displayFile(blob) {
-        console.log(JSON.parse(process.env.REACT_APP_SUPPORTED_FILES))
         let url = window.URL.createObjectURL(blob);
-        let frame = $("#file-display")[0]
-        frame.contentWindow.location.replace(url);
+        let supportedFiles = JSON.parse(process.env.REACT_APP_SUPPORTED_FILES); 
+        let fileSupport = supportedFiles[this.state.metadata.mimetype.split('/', 1)[0]];
+        let tag = "";
+
+        if (fileSupport && (
+                fileSupport["types"] === [] ||
+                fileSupport["types"].includes(this.state.metadata.mimetype.split('/', 2)[1])
+                )
+            ) {
+            if (fileSupport["tag"] === "iframe") {
+                tag = `<iframe id="file-display" className="iframe-display" src=${url} allowFullScreen="true"></iframe>`;
+            }
+            else if (fileSupport["tag"] === "pre") {
+                tag = `<pre id="file-display" className="pre-display">${blob.text()}</pre>`;
+            }
+            else if (fileSupport["tag"] === "audio") {
+                tag = `<audio id="file-display" className="audio-display" controls><source src=${url} type=${this.state.metadata.mimetype}></source></audio>`;
+            }
+            else if (fileSupport["tag"] === "video") {
+                tag = `<video id="file-display" className="video-display" controls><source src=${url} type=${this.state.metadata.mimetype}></source></video>`;
+            }
+            else if (fileSupport["tag"] === "img") {
+                tag = `<img id="file-display" className="img-display" src=${url} alt=${this.state.metadata.filename + " display"} />`;
+            }
+        }
+        $("#file-display-holder").html(tag);
     }
 
     deleteFile() {
@@ -148,16 +171,54 @@ class File extends React.Component {
             });
     }
 
+    updateFileMetadata() {
+        let trustedUsers = document.getElementById("trusted-users-input").value;
+        let comment = document.getElementById("comment-input").value;
+        let privacy = document.getElementById("privacy-input").value;
+        console.log()
+        axios({
+            method: "put",
+            url: SERVER_URL + process.env.REACT_APP_UPDATE_METADATA_PATH,
+            data: {
+                fileId: this.props.params.fileId,
+                trustedUsers: trustedUsers,
+                comment: comment,
+                privacy: privacy
+            },
+            withCredentials: true
+            })
+            .then(res => {
+                console.log(res)
+                if (res.status === 204) this.forceUpdate();
+            });
+    }
+
     render() {
+        let userForm = "";
+        if (this.state.metadata && this.state.metadata.isUsers) {
+            userForm = 
+            <form id="metadata-update-form" className="metadata-update-form">
+                <select id="privacy-input" className="privacy-input" name="privacy" defaultValue={this.state.metadata.privacy}>
+                    <option value="private">Private</option>
+                    <option value="shared">Shared</option>
+                    <option value="public">Public</option>
+                </select>
+                <input type="text" id="trusted-users-input" className="trusted-users-input" defaultValue={this.state.metadata.acceptedUsers} maxLength="500" />
+                <input type="text" id="comment-input" className="comment-input" defaultValue={this.state.metadata.comment} maxLength="500" />
+                <input type="reset" id="metadata-reset-button" className="metadata-reset-button" value="Reset" />
+                <button type="button" id="metadata-update-button" className="metadata-update-button" onClick={this.updateFileMetadata}>Update</button>
+            </form>;
+        }
         return(
             <div>
                 <p>File Page</p>
                 <p><strong>{this.props.params.fileId}</strong></p>
-                <iframe id="file-display" className="file-display" title="File Display" sandbox=""></iframe>
-                <br />
+                <div id="file-display-holder"></div>
                 <button type="button" id="download-button" className="download-button" onClick={() => this.retrieveFile(this.downloadFile)}>Download File</button>
                 <button type="button" id="delete-button" className="delete-button" onClick={this.deleteFile}>Delete File</button>
                 <button type="button" id="display-button" className="display-button" onClick={() => this.retrieveFile(this.displayFile)}>Display File</button>
+                <br />
+                {userForm}
             </div>
         )
     }

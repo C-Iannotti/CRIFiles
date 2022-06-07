@@ -3,7 +3,6 @@ require("dotenv").config()
 const passport = require("passport");
 const bcrypt = require("bcrypt");
 const MongoDB = require("mongodb");
-const { pipeline } = require("node:stream/promises");
 const fs = require("fs");
 const multer = require("multer");
 
@@ -78,11 +77,13 @@ function main(app, database) {
 
                 fileCollection.insertOne({
                         user: req.user._id,
-                        file: stream.id,
+                        _id: stream.id,
                         fileName: req.file.originalname,
-                        privacy: "public",
-                        validUsers: [],
-                        size: req.file.size
+                        privacy: req.body.privacy,
+                        trustedUsers: req.body.trustedUsers,
+                        size: req.file.size,
+                        mimetype: req.file.mimetype,
+                        comment: req.body.comment
                     },
                     function(err, doc) {
                         if (err) res.status(400);
@@ -138,12 +139,12 @@ function main(app, database) {
         function(req, res) {
             fileCollection.findOneAndDelete({
                     user: MongoDB.ObjectId(req.user._id),
-                    file: MongoDB.ObjectId(req.params.fileId)
+                    _id: MongoDB.ObjectId(req.params.fileId)
                 },
                 function(err, doc) {
                     if (err || doc === null) res.status(400).send();
                     else {
-                        fileBucket.delete(doc.value.file);
+                        fileBucket.delete(doc.value._id);
                         fileCollection.delete
                         res.status(204).send();
                     }
@@ -156,24 +157,34 @@ function main(app, database) {
     app.get(process.env.RETRIEVE_METADATA_PATH + "/:fileId",
         ensureAuthenticated(),
         function(req, res) {
-            console.log(req.params.fileId)
             fileCollection.findOne({
-                    file: MongoDB.ObjectId(req.params.fileId)
+                    _id: MongoDB.ObjectId(req.params.fileId)
                 },
                 function(err, doc) {
                     if (err || doc === null) res.status(500).send();
                     else {
                         res.json({
                             userId: doc.user,
-                            fileId: doc.file,
+                            fileId: doc._id,
                             filename: doc.fileName,
                             privacy: doc.privacy,
-                            validUsers: doc.validUsers,
-                            size: doc.size
+                            trustedUsers: doc.trustedUsers,
+                            size: doc.size,
+                            mimetype: doc.mimetype,
+                            isUsers: doc.user.toString() === req.user._id.toString(),
+                            comment: doc.comment
                         });
                     }
                 }
             );
+        }
+    );
+
+    //API for updating a file's metadata
+    app.put(process.env.UPDATE_METADATA_PATH,
+        ensureAuthenticated(),
+        function(req, res) {
+            console.log(req.body);
         }
     );
 }

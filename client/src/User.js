@@ -3,7 +3,7 @@ import axios from "axios";
 import "./style.css";
 import { withWrapper } from "./comonentWrapper";
 
-const URL = process.env.REACT_APP_PROTOCOL
+const SERVER_URL = process.env.REACT_APP_PROTOCOL
     + process.env.REACT_APP_DOMAIN;
 
 class User extends React.Component {
@@ -12,26 +12,38 @@ class User extends React.Component {
         this.state = {
             userFiles: []
         };
-
         this.handleUpload = this.handleUpload.bind(this);
         this.getUserFiles = this.getUserFiles.bind(this);
+
         this.getUserFiles();
     }
 
     handleUpload() {
-        let file = document.getElementById("file-upload").files[0];
+        console.log("why are we her")
+        console.log("what")
+        let file = document.getElementById("file-input").files[0];
+        console.log("Check form elements");
+        let trustedUsers = document.getElementById("trusted-users-input").value;
+        console.log("Have users");
+        let comment = document.getElementById("comment-input").value;
+        console.log("Have comment");
+        let privacy = document.getElementById("privacy-input").value;
         let getUserFiles = this.getUserFiles;
-        console.log("Here");
-        console.log(typeof(file));
 
         axios({
             method: "post",
-            url: URL + process.env.REACT_APP_UPLOAD_PATH,
-            data: { userFile: file },
+            url: SERVER_URL + process.env.REACT_APP_UPLOAD_PATH,
+            data: { 
+                userFile: file,
+                trustedUsers: trustedUsers,
+                comment: comment,
+                privacy: privacy
+            },
             headers: { "Content-Type": "multipart/form-data" },
-            withCredentials: true
+            withCredentials: true,
             })
             .then(function(res) {
+                console.log(res);
                 getUserFiles();
             })
             .catch(function(err) {
@@ -41,10 +53,9 @@ class User extends React.Component {
     }
 
     getUserFiles() {
-        //let setState = this.setState
         axios({
             method: "get",
-            url: URL + process.env.REACT_APP_USER_FILES_PATH,
+            url: SERVER_URL + process.env.REACT_APP_USER_FILES_PATH,
             withCredentials: true
             })
             .then(res => {
@@ -64,13 +75,13 @@ class User extends React.Component {
         for (const file of this.state.userFiles) {
             filesHtml.push(
                 <div key={file._id} className="file-meta-data">
-                    <p><strong>{file.file}</strong></p>
-                    <p>{file.user}</p>
+                    <p><strong>{file._id}</strong></p>
+                    <p>{file.fileName}</p>
                     <p>{file.privacy}</p>
                     <button
                         type="button"
                         className="open-file-button"
-                        onClick={() => navigate(".." + process.env.REACT_APP_FILE_PAGE + "/" + file.file)}
+                        onClick={() => navigate(".." + process.env.REACT_APP_FILE_PAGE + "/" + file._id)}
                     >Open File</button>
                 </div>
             );
@@ -79,11 +90,19 @@ class User extends React.Component {
         return (
             <div className="user-page">
                 <p>Hello user user</p>
-                <div className="upload-form">
+                <form id="file-upload-form" className="file-upload-form">
                     <label htmlFor="file-upload">Select a file:</label>
-                    <input type="file" id="file-upload" name="userFile" />
-                    <button type="button" id="upload-button" className="upload-button" onClick={this.handleUpload}>Upload File</button>
-                </div>
+                    <input type="file" id="file-input" className="file-input" name="userFile" />
+                    <select id="privacy-input" className="privacy-input" name="privacy" defaultValue="private">
+                        <option value="private">Private</option>
+                        <option value="shared">Shared</option>
+                        <option value="public">Public</option>
+                    </select>
+                    <input type="text" id="trusted-users-input" className="trusted-users-input" name="trustedUsers" defaultValue="[]" maxLength="500" />
+                    <input type="text" id="comment-input" className="comment-input" name="comment" defaultValue="" maxLength="500" />
+                    <input type="reset" id="file-reset-button" className="file-reset-button" value="Reset" />
+                    <button type="button" id="file-upload-button" className="file-upload-button" onClick={this.handleUpload}>Submit</button>
+                </form>
                 {filesHtml}
             </div>
         )

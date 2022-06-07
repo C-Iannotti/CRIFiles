@@ -3,7 +3,7 @@ import axios from "axios";
 import { withWrapper } from "./comonentWrapper";
 import "./style.css";
 
-const URL = process.env.REACT_APP_PROTOCOL
+const SERVER_URL = process.env.REACT_APP_PROTOCOL
     + process.env.REACT_APP_DOMAIN;
 
 class Home extends React.Component {
@@ -30,7 +30,7 @@ class Home extends React.Component {
             });
         }
         else {         
-            axios.post(URL + process.env.REACT_APP_REGISTER_PATH, {
+            axios.post(SERVER_URL + process.env.REACT_APP_REGISTER_PATH, {
                     username: username,
                     password: password
                 },
@@ -52,7 +52,7 @@ class Home extends React.Component {
         let password = document.getElementById("password").value;
         let navigate = this.props.navigate;
 
-        axios.post(URL + process.env.REACT_APP_LOGIN_PATH, {
+        axios.post(SERVER_URL + process.env.REACT_APP_LOGIN_PATH, {
                 username: username,
                 password: password
             },
