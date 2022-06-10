@@ -11,7 +11,10 @@ const DB_STORE_NAME = process.env.REACT_APP_IDB_STORE_NAME;
 class File extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { metadata: null };
+        this.state = {
+            metadata: null,
+            tag: null
+        };
 
         this.displayFile = this.displayFile.bind(this);
         this.downloadFile = this.downloadFile.bind(this);
@@ -128,30 +131,32 @@ class File extends React.Component {
         let url = window.URL.createObjectURL(blob);
         let supportedFiles = JSON.parse(process.env.REACT_APP_SUPPORTED_FILES); 
         let fileSupport = supportedFiles[this.state.metadata.mimetype.split('/', 1)[0]];
-        let tag = "";
 
         if (fileSupport && (
-                fileSupport["types"] === [] ||
+                !Array.isArray(fileSupport["types"]) ||
+                fileSupport["types"].length === 0 ||
                 fileSupport["types"].includes(this.state.metadata.mimetype.split('/', 2)[1])
                 )
             ) {
             if (fileSupport["tag"] === "iframe") {
-                tag = `<iframe id="file-display" className="iframe-display" src=${url} allowFullScreen="true"></iframe>`;
+                this.setState({ tag: <iframe id="file-display" className="iframe-display" src={url} allowFullScreen="true" title={this.state.params.fileId + " display"}></iframe> });
             }
             else if (fileSupport["tag"] === "pre") {
-                tag = `<pre id="file-display" className="pre-display">${blob.text()}</pre>`;
+                blob.text().then(res => {
+                    this.setState({ tag: <pre id="file-display" className="pre-display">{res}</pre> }); 
+                    }
+                );
             }
             else if (fileSupport["tag"] === "audio") {
-                tag = `<audio id="file-display" className="audio-display" controls><source src=${url} type=${this.state.metadata.mimetype}></source></audio>`;
+                this.setState({ tag: <audio id="file-display" className="audio-display" controls><source src={url} type={this.state.metadata.mimetype}></source></audio> });
             }
             else if (fileSupport["tag"] === "video") {
-                tag = `<video id="file-display" className="video-display" controls><source src=${url} type=${this.state.metadata.mimetype}></source></video>`;
+                this.setState({ tag: <video id="file-display" className="video-display" controls><source src={url} type={this.state.metadata.mimetype}></source></video> });
             }
             else if (fileSupport["tag"] === "img") {
-                tag = `<img id="file-display" className="img-display" src=${url} alt=${this.state.metadata.filename + " display"} />`;
+                this.setState({ tag: <img id="file-display" className="img-display" src={url} alt={this.state.metadata.filename + " display"} /> });
             }
         }
-        $("#file-display-holder").html(tag);
     }
 
     deleteFile() {
@@ -175,7 +180,7 @@ class File extends React.Component {
         let trustedUsers = document.getElementById("trusted-users-input").value;
         let comment = document.getElementById("comment-input").value;
         let privacy = document.getElementById("privacy-input").value;
-        console.log()
+
         axios({
             method: "put",
             url: SERVER_URL + process.env.REACT_APP_UPDATE_METADATA_PATH,
@@ -188,13 +193,19 @@ class File extends React.Component {
             withCredentials: true
             })
             .then(res => {
-                console.log(res)
-                if (res.status === 204) this.forceUpdate();
+                if (res.status >= 400) {
+                    this.setState({ errorMessage: "Unable to update file's metadata" })
+                }
+                else {
+                    this.setState({ metadata: res.data })
+                }
             });
     }
 
     render() {
-        let userForm = "";
+        let userForm = null;
+        let errorMessage = null;
+
         if (this.state.metadata && this.state.metadata.isUsers) {
             userForm = 
             <form id="metadata-update-form" className="metadata-update-form">
@@ -203,21 +214,25 @@ class File extends React.Component {
                     <option value="shared">Shared</option>
                     <option value="public">Public</option>
                 </select>
-                <input type="text" id="trusted-users-input" className="trusted-users-input" defaultValue={this.state.metadata.acceptedUsers} maxLength="500" />
+                <input type="text" id="trusted-users-input" className="trusted-users-input" defaultValue={this.state.metadata.trustedUsers} maxLength="500" />
                 <input type="text" id="comment-input" className="comment-input" defaultValue={this.state.metadata.comment} maxLength="500" />
                 <input type="reset" id="metadata-reset-button" className="metadata-reset-button" value="Reset" />
                 <button type="button" id="metadata-update-button" className="metadata-update-button" onClick={this.updateFileMetadata}>Update</button>
             </form>;
         }
+        if (this.state.errorMessage) {
+            errorMessage = <p id="update-form-error" className="error-message">{this.state.errorMessage}</p>;
+        }
         return(
             <div>
                 <p>File Page</p>
                 <p><strong>{this.props.params.fileId}</strong></p>
-                <div id="file-display-holder"></div>
+                <div id="file-display-holder">{this.state.tag}</div>
                 <button type="button" id="download-button" className="download-button" onClick={() => this.retrieveFile(this.downloadFile)}>Download File</button>
                 <button type="button" id="delete-button" className="delete-button" onClick={this.deleteFile}>Delete File</button>
                 <button type="button" id="display-button" className="display-button" onClick={() => this.retrieveFile(this.displayFile)}>Display File</button>
                 <br />
+                {errorMessage}
                 {userForm}
             </div>
         )

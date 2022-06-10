@@ -2,6 +2,7 @@ import React from "react";
 import axios from "axios";
 import "./style.css";
 import { withWrapper } from "./comonentWrapper";
+import $ from "jquery";
 
 const SERVER_URL = process.env.REACT_APP_PROTOCOL
     + process.env.REACT_APP_DOMAIN;
@@ -10,25 +11,22 @@ class User extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            userFiles: []
+            userFiles: [],
+            pageNumber: 1
         };
+
         this.handleUpload = this.handleUpload.bind(this);
         this.getUserFiles = this.getUserFiles.bind(this);
+        this.getFilePage = this.getFilePage.bind(this);
 
-        this.getUserFiles();
+        this.getUserFiles(1);
     }
 
     handleUpload() {
-        console.log("why are we her")
-        console.log("what")
         let file = document.getElementById("file-input").files[0];
-        console.log("Check form elements");
         let trustedUsers = document.getElementById("trusted-users-input").value;
-        console.log("Have users");
         let comment = document.getElementById("comment-input").value;
-        console.log("Have comment");
         let privacy = document.getElementById("privacy-input").value;
-        let getUserFiles = this.getUserFiles;
 
         axios({
             method: "post",
@@ -42,31 +40,40 @@ class User extends React.Component {
             headers: { "Content-Type": "multipart/form-data" },
             withCredentials: true,
             })
-            .then(function(res) {
-                console.log(res);
-                getUserFiles();
+            .then(res => {
+                this.getUserFiles(this.state.pageNumber);
             })
-            .catch(function(err) {
+            .catch(err => {
                 console.error(err);
             });
         this.forceUpdate()
     }
 
-    getUserFiles() {
+    getUserFiles(page) {
+        $(".page-button").prop("disabled", true);
         axios({
             method: "get",
-            url: SERVER_URL + process.env.REACT_APP_USER_FILES_PATH,
+            url: SERVER_URL + process.env.REACT_APP_USER_FILES_PATH + "/" + (page - 1),
             withCredentials: true
             })
             .then(res => {
                 this.setState({
-                    userFiles: res.data
+                    userFiles: res.data.files,
+                    pageNumber: page
                 });
+                $(".page-button").prop("disabled", false);
             })
-            .catch(function(err) {
+            .catch(err => {
                 console.error(err);
                 return null;
             })
+    }
+
+    getFilePage(num) {
+        return () => {
+            this.getUserFiles(this.state.pageNumber+num)
+            console.log(this.state.pageNumber+num)
+        }
     }
 
     render() {
@@ -103,6 +110,11 @@ class User extends React.Component {
                     <input type="reset" id="file-reset-button" className="file-reset-button" value="Reset" />
                     <button type="button" id="file-upload-button" className="file-upload-button" onClick={this.handleUpload}>Submit</button>
                 </form>
+                <div id="page-navigator" className="page-navigator">
+                    <button type="button" id="previous-page-button" className="page-button" onClick={this.getFilePage(-1)}>Previous</button>
+                    {this.state.pageNumber}
+                    <button type="button" id="next-page-button" className="page-button" onClick={this.getFilePage(1)}>Next</button>
+                </div>
                 {filesHtml}
             </div>
         )

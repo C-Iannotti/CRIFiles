@@ -39,7 +39,20 @@
     justify-content: flex-start;
 }
 
-.file-display {
-    height: 300px;
-    width: 500px;
+.page-navigator {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.pre-display {
+    height: auto;
+    max-height: 300px;
+    overflow: auto;
+    word-break: normal;
+    word-wrap: normal;
+    white-space: pre;
+    border: 5px solid black;
+    border-radius: 15px;
 }

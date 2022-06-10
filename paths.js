@@ -102,14 +102,24 @@ function main(app, database) {
         }
     );
 
-    //API for retrieving all of a user's file meta data
-    app.get(process.env.USER_FILES_PATH,
+    //API for retrieving page of user's files' metadata
+    app.get(process.env.USER_FILES_PATH + "/:pageNum",
         ensureAuthenticated(),
         function(req, res) {
-            fileCollection.find({ user: req.user._id })
-                .toArray(function(err, docs) {
-                    if (err) res.status(500).send({ error: err});
-                    res.send(docs);
+            fileCollection.find({
+                    user: req.user._id
+                },
+                {
+                    limit: Number(process.env.PAGE_SIZE),
+                    sort: { _id: 1},
+                    skip: Number(process.env.PAGE_SIZE) * Number(req.params.pageNum)
+                }).toArray(function(err, docs) {
+                        if (err || docs === null) res.status(500).send()
+                        else {
+                            res.json({
+                                files: docs
+                            })
+                        }
                 })
         }
     );
@@ -184,7 +194,33 @@ function main(app, database) {
     app.put(process.env.UPDATE_METADATA_PATH,
         ensureAuthenticated(),
         function(req, res) {
-            console.log(req.body);
+            fileCollection.findOneAndUpdate({
+                    _id: MongoDB.ObjectId(req.body.fileId),
+                    user: MongoDB.ObjectId(req.user._id)
+                },
+                { "$set": {
+                    comment: req.body.comment,
+                    trustedUsers: req.body.trustedUsers,
+                    privacy: req.body.privacy
+                }},
+                function(err, doc) {
+                    if (err || doc === null) res.status(500).send();
+                    else {
+                        doc = doc.value
+                        res.json({
+                            userId: doc.user,
+                            fileId: doc._id,
+                            filename: doc.fileName,
+                            privacy: doc.privacy,
+                            trustedUsers: doc.trustedUsers,
+                            size: doc.size,
+                            mimetype: doc.mimetype,
+                            isUsers: doc.user.toString() === req.user._id.toString(),
+                            comment: doc.comment
+                        });
+                    };
+                }
+            );
         }
     );
 }
