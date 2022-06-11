@@ -2,7 +2,7 @@ import React from "react";
 import axios from "axios";
 import "./style.css";
 import { withWrapper } from "./comonentWrapper";
-import $ from "jquery";
+import $ from "jquery"
 
 const SERVER_URL = process.env.REACT_APP_PROTOCOL
     + process.env.REACT_APP_DOMAIN;
@@ -12,14 +12,19 @@ class User extends React.Component {
         super(props)
         this.state = {
             userFiles: [],
-            pageNumber: 1
+            pageNumber: 1,
+            controller: new AbortController(),
+            totalFiles: null,
+            inputValue: 1
         };
 
         this.handleUpload = this.handleUpload.bind(this);
-        this.getUserFiles = this.getUserFiles.bind(this);
         this.getFilePage = this.getFilePage.bind(this);
+        this.handlePageEnter = this.handlePageEnter.bind(this);
+    }
 
-        this.getUserFiles(1);
+    componentDidMount() {
+        this.getFilePage(1)();
     }
 
     handleUpload() {
@@ -49,36 +54,55 @@ class User extends React.Component {
         this.forceUpdate()
     }
 
-    getUserFiles(page) {
-        $(".page-button").prop("disabled", true);
-        axios({
-            method: "get",
-            url: SERVER_URL + process.env.REACT_APP_USER_FILES_PATH + "/" + (page - 1),
-            withCredentials: true
-            })
-            .then(res => {
-                this.setState({
-                    userFiles: res.data.files,
-                    pageNumber: page
+    getFilePage(page) {
+        return () => {
+            if (this.state.totalFiles === null || (page >= 1 && page <= Math.ceil(this.state.totalFiles / process.env.REACT_APP_PAGE_SIZE))) {
+                this.state.controller.abort()
+                this.setState(({
+                    userFiles: [],
+                    pageNumber: page,
+                    inputValue: page,
+                    controller: new AbortController()
+                }), err => {
+                    if (err) console.log("Unable to change page")
+
+                    axios({
+                        method: "get",
+                        url: SERVER_URL + process.env.REACT_APP_USER_FILES_PATH + "/" + (page - 1),
+                        withCredentials: true,
+                        signal: this.state.controller.signal
+                        })
+                        .then(res => {
+                            this.setState({
+                                userFiles: res.data.files,
+                                totalFiles: res.data.totalFiles
+                            });
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            return null;
+                        });
                 });
-                $(".page-button").prop("disabled", false);
-            })
-            .catch(err => {
-                console.error(err);
-                return null;
-            })
+            }
+        }
     }
 
-    getFilePage(num) {
-        return () => {
-            this.getUserFiles(this.state.pageNumber+num)
-            console.log(this.state.pageNumber+num)
+    handlePageEnter(e) {
+        if (e.key === "Enter") {
+            this.getFilePage(Number($("#page-number-input").val()))()
         }
     }
 
     render() {
         let navigate = this.props.navigate;
         let filesHtml = [];
+        let pageInput = <input type="text"
+                               id="page-number-input"
+                               className="page-number-input"
+                               value={this.state.inputValue}
+                               onKeyDown={this.handlePageEnter}
+                               onChange={e => this.setState({ inputValue: e.target.value })}
+                        />;
         for (const file of this.state.userFiles) {
             filesHtml.push(
                 <div key={file._id} className="file-meta-data">
@@ -110,10 +134,11 @@ class User extends React.Component {
                     <input type="reset" id="file-reset-button" className="file-reset-button" value="Reset" />
                     <button type="button" id="file-upload-button" className="file-upload-button" onClick={this.handleUpload}>Submit</button>
                 </form>
+                {this.state.totalFiles !== null && <p>{this.state.totalFiles}</p>}
                 <div id="page-navigator" className="page-navigator">
-                    <button type="button" id="previous-page-button" className="page-button" onClick={this.getFilePage(-1)}>Previous</button>
-                    {this.state.pageNumber}
-                    <button type="button" id="next-page-button" className="page-button" onClick={this.getFilePage(1)}>Next</button>
+                    <button type="button" id="previous-page-button" className="page-button" onClick={this.getFilePage(this.state.pageNumber-1)}>Previous</button>
+                    {pageInput}
+                    <button type="button" id="next-page-button" className="page-button" onClick={this.getFilePage(this.state.pageNumber+1)}>Next</button>
                 </div>
                 {filesHtml}
             </div>

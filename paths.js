@@ -105,21 +105,30 @@ function main(app, database) {
     //API for retrieving page of user's files' metadata
     app.get(process.env.USER_FILES_PATH + "/:pageNum",
         ensureAuthenticated(),
-        function(req, res) {
-            fileCollection.find({
+        (req, res) => {
+            fileCollection.count({
                     user: req.user._id
                 },
-                {
-                    limit: Number(process.env.PAGE_SIZE),
-                    sort: { _id: 1},
-                    skip: Number(process.env.PAGE_SIZE) * Number(req.params.pageNum)
-                }).toArray(function(err, docs) {
-                        if (err || docs === null) res.status(500).send()
-                        else {
-                            res.json({
-                                files: docs
-                            })
-                        }
+                (err, count) => {
+                    if (err) res.status(500).send();
+                    else {
+                        fileCollection.find({
+                                user: req.user._id
+                            },
+                            {
+                                limit: Number(process.env.PAGE_SIZE),
+                                sort: { _id: 1},
+                                skip: Number(process.env.PAGE_SIZE) * Number(req.params.pageNum)
+                            }).toArray((err, docs) => {
+                                    if (err || docs === null) res.status(500).send()
+                                    else {
+                                        res.json({
+                                            files: docs,
+                                            totalFiles: count
+                                        })
+                                    }
+                            });
+                    }
                 })
         }
     );
