@@ -69,6 +69,7 @@ class Home extends React.Component {
             });
     }
     render() {
+        console.log(SERVER_URL + process.env.REACT_APP_REGISTER_PATH)
         let errorMessage = this.state["errorMessage"] || null;
         return (
         <div className="login-form">

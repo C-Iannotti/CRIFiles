@@ -21,6 +21,9 @@ function main(app, database) {
     const fileCollection = database.collection("files");
     const fileBucket = new MongoDB.GridFSBucket(database, { bucketName: "file-bucket"});
 
+    userCollection.createIndex( { username: "text" })
+    fileCollection.createIndex( { fileName: "text" })
+
     //API path for registering a user
     app.post(process.env.REGISTER_PATH,
         function(req, res, next) {
@@ -61,6 +64,32 @@ function main(app, database) {
             res.status(204).send();
         }
     );
+
+    //API for getting page of users with a given text in username
+    app.get(process.env.RETRIEVE_USERS_PATH + "/:userText/:pageNum",
+        ensureAuthenticated(),
+        function(req, res) {
+            userCollection.find({
+                    $or: [
+                    { username: {
+                        $regex: "^" + req.params.userText
+                    }},
+                    { _id: {
+                        $regex: "^" + req.params.userText
+                    }}]
+                },
+                {
+                    limit: process.env.PAGE_SIZE,
+                    skip: Number(process.env.PAGE_SIZE) * Number(req.params.pageNum)
+                }).toArray((err, docs) => {
+                    if (err || docs === null) res.status(500).send()
+                    else {
+                        res.json({
+                            users: docs
+                        });
+                    }
+                })
+        })
 
     //API path for uploading a file to database
     app.post(process.env.UPLOAD_PATH,

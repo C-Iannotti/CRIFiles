@@ -11,20 +11,32 @@ class User extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            userFiles: [],
-            pageNumber: 1,
-            controller: new AbortController(),
+            searchedFiles: [],
+            searchedUsers: [],
+            filesPage: 1,
+            usersPage: 1,
+            filesController: null,
+            usersController: null,
             totalFiles: null,
-            inputValue: 1
+            filesInput: 1,
+            usersInput: "",
+            trustedUsers: {}
         };
 
         this.handleUpload = this.handleUpload.bind(this);
         this.getFilePage = this.getFilePage.bind(this);
-        this.handlePageEnter = this.handlePageEnter.bind(this);
+        this.handlePageEnter = this.filePageInputKeyDown.bind(this);
+        this.getFileHTMLDisplay = this.getFileDisplayHTML.bind(this);
     }
 
     componentDidMount() {
         this.getFilePage(1)();
+    }
+
+    filePageInputKeyDown(e) {
+        if (e.key === "Enter") {
+            this.getFilePage(Number($("#page-number-input").val()))()
+        }
     }
 
     handleUpload() {
@@ -46,7 +58,7 @@ class User extends React.Component {
             withCredentials: true,
             })
             .then(res => {
-                this.getUserFiles(this.state.pageNumber);
+                this.getFilePage(this.state.filesPage)();
             })
             .catch(err => {
                 console.error(err);
@@ -57,90 +69,142 @@ class User extends React.Component {
     getFilePage(page) {
         return () => {
             if (this.state.totalFiles === null || (page >= 1 && page <= Math.ceil(this.state.totalFiles / process.env.REACT_APP_PAGE_SIZE))) {
-                this.state.controller.abort()
+                if (this.state.filesController !== null) this.state.filesController.abort();
+                
                 this.setState(({
-                    userFiles: [],
-                    pageNumber: page,
-                    inputValue: page,
-                    controller: new AbortController()
+                    searchedFiles: [],
+                    filesPage: page,
+                    filesInput: page,
+                    filesController: new AbortController()
                 }), err => {
-                    if (err) console.log("Unable to change page")
-
-                    axios({
-                        method: "get",
-                        url: SERVER_URL + process.env.REACT_APP_USER_FILES_PATH + "/" + (page - 1),
-                        withCredentials: true,
-                        signal: this.state.controller.signal
-                        })
-                        .then(res => {
-                            this.setState({
-                                userFiles: res.data.files,
-                                totalFiles: res.data.totalFiles
+                    if (err) console.error(err)
+                    else {
+                        axios({
+                            method: "get",
+                            url: SERVER_URL + process.env.REACT_APP_USER_FILES_PATH + "/" + (page - 1),
+                            withCredentials: true,
+                            signal: this.state.filesController.signal
+                            })
+                            .then(res => {
+                                this.setState({
+                                    searchedFiles: res.data.files,
+                                    totalFiles: res.data.totalFiles,
+                                    filesController: null
+                                });
+                            })
+                            .catch(err => {
+                                console.error(err);
                             });
-                        })
-                        .catch(err => {
-                            console.error(err);
-                            return null;
-                        });
+                    }
                 });
             }
         }
     }
 
-    handlePageEnter(e) {
-        if (e.key === "Enter") {
-            this.getFilePage(Number($("#page-number-input").val()))()
+    getUsersPage(userString, pageNumber) {
+        return() => {
+            if (this.state.usersController !== null) this.state.usersController.abort();
+            this.setState({
+                searchedUsers: [],
+                usersController: new AbortController(),
+                usersInput: userString,
+                usersPage: pageNumber
+            }, err => {
+                if (err) console.error(err)
+                if (userString && pageNumber >= 1) {
+                    axios({
+                            method: "get",
+                            url: SERVER_URL + process.env.REACT_APP_RETRIEVE_USERS_PATH
+                                + "/" + this.state.usersInput + "/" + String(this.state.usersPage - 1),
+                            withCredentials: true,
+                            signal: this.state.usersController.signal
+                        })
+                        .then(res => {
+                            this.setState({
+                                searchedUsers: res.data.users,
+                                usersController: null
+                            })
+                        })
+                        .catch(err => {
+                            console.error(err);
+                        });
+                }
+            })
         }
     }
 
-    render() {
-        let navigate = this.props.navigate;
-        let filesHtml = [];
-        let pageInput = <input type="text"
-                               id="page-number-input"
-                               className="page-number-input"
-                               value={this.state.inputValue}
-                               onKeyDown={this.handlePageEnter}
-                               onChange={e => this.setState({ inputValue: e.target.value })}
-                        />;
-        for (const file of this.state.userFiles) {
-            filesHtml.push(
-                <div key={file._id} className="file-meta-data">
-                    <p><strong>{file._id}</strong></p>
-                    <p>{file.fileName}</p>
-                    <p>{file.privacy}</p>
-                    <button
-                        type="button"
-                        className="open-file-button"
-                        onClick={() => navigate(".." + process.env.REACT_APP_FILE_PAGE + "/" + file._id)}
-                    >Open File</button>
+    getFileDisplayHTML() {
+        return (
+            <div>
+                {this.state.totalFiles !== null && <p>{this.state.totalFiles}</p>}
+                <div id="page-navigator" className="page-navigator">
+                    <button type="button" id="previous-page-button" className="page-button" onClick={this.getFilePage(this.state.filesPage-1)}>Previous</button>
+                    <input  type="text"
+                            id="page-number-input"
+                            className="page-number-input"
+                            value={this.state.filesInput}
+                            onKeyDown={this.filePageInputKeyDown}
+                            onChange={e => this.setState({ inputValue: e.target.value })}
+                    />
+                    <button type="button" id="next-page-button" className="page-button" onClick={this.getFilePage(this.state.filesPage+1)}>Next</button>
                 </div>
-            );
-        }
+                {this.state.searchedFiles.map(file => {
+                    return (
+                        <div key={file._id} className="file-meta-data">
+                            <p><strong>{file._id}</strong></p>
+                            <p>{file.fileName}</p>
+                            <p>{file.privacy}</p>
+                            <button
+                                type="button"
+                                className="open-file-button"
+                                onClick={() => this.props.navigate(".." + process.env.REACT_APP_FILE_PAGE + "/" + file._id)}
+                            >Open File</button>
+                        </div>
+                    )
+                })}
+            </div>
+        )
+    }
 
+    getFileUploadFormHTML() {
+        return (
+            <form id="file-upload-form" className="file-upload-form">
+                <label htmlFor="file-upload">Select a file:</label>
+                <input type="file" id="file-input" className="file-input" name="userFile" />
+                <select id="privacy-input" className="privacy-input" name="privacy" defaultValue="private">
+                    <option value="private">Private</option>
+                    <option value="shared">Shared</option>
+                    <option value="public">Public</option>
+                </select>
+                <input type="text"
+                       id="trusted-users-input"
+                       className="trusted-users-input"
+                       name="trustedUsers"
+                       value={this.state.usersInput}
+                       onChange={e => {this.getUsersPage(e.target.value, this.state.usersPage)()}}
+                       maxLength="500"
+                />
+                {this.state.searchedUsers.map(user => {
+                    return <p key={user._id + "10"}>{user.username + ": " + user._id}</p>
+                })}
+                <br />
+                <br />
+                {Object.values(this.state.trustedUsers).map(user => {
+                    return <p key={user._id}>{user.username + " " + user._id}</p>
+                })}
+                <input type="text" id="comment-input" className="comment-input" name="comment" defaultValue="" maxLength="500" />
+                <input type="reset" id="file-reset-button" className="file-reset-button" value="Reset" />
+                <button type="button" id="file-upload-button" className="file-upload-button" onClick={this.handleUpload}>Submit</button>
+            </form>
+        );
+    }
+
+    render() {
         return (
             <div className="user-page">
                 <p>Hello user user</p>
-                <form id="file-upload-form" className="file-upload-form">
-                    <label htmlFor="file-upload">Select a file:</label>
-                    <input type="file" id="file-input" className="file-input" name="userFile" />
-                    <select id="privacy-input" className="privacy-input" name="privacy" defaultValue="private">
-                        <option value="private">Private</option>
-                        <option value="shared">Shared</option>
-                        <option value="public">Public</option>
-                    </select>
-                    <input type="text" id="trusted-users-input" className="trusted-users-input" name="trustedUsers" defaultValue="[]" maxLength="500" />
-                    <input type="text" id="comment-input" className="comment-input" name="comment" defaultValue="" maxLength="500" />
-                    <input type="reset" id="file-reset-button" className="file-reset-button" value="Reset" />
-                    <button type="button" id="file-upload-button" className="file-upload-button" onClick={this.handleUpload}>Submit</button>
-                </form>
-                {this.state.totalFiles !== null && <p>{this.state.totalFiles}</p>}
-                <div id="page-navigator" className="page-navigator">
-                    <button type="button" id="previous-page-button" className="page-button" onClick={this.getFilePage(this.state.pageNumber-1)}>Previous</button>
-                    {pageInput}
-                    <button type="button" id="next-page-button" className="page-button" onClick={this.getFilePage(this.state.pageNumber+1)}>Next</button>
-                </div>
-                {filesHtml}
+                {this.getFileUploadFormHTML()}
+                {this.getFileDisplayHTML()}
             </div>
         )
     }

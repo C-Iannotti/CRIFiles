@@ -22,7 +22,10 @@ class File extends React.Component {
         this.deleteFile = this.deleteFile.bind(this);
         this.checkFile = this.checkFile.bind(this);
         this.updateFileMetadata = this.updateFileMetadata.bind(this);
+        this.getUserFormHTML =this.getUserFormHTML.bind(this);
+    }
 
+    componentDidMount() {
         this.checkFile();
     }
 
@@ -139,7 +142,7 @@ class File extends React.Component {
                 )
             ) {
             if (fileSupport["tag"] === "iframe") {
-                this.setState({ tag: <iframe id="file-display" className="iframe-display" src={url} allowFullScreen="true" title={this.state.params.fileId + " display"}></iframe> });
+                this.setState({ tag: <iframe id="file-display" className="iframe-display" src={url} allow="fullscreen" title={this.props.params.fileId + " display"}></iframe> });
             }
             else if (fileSupport["tag"] === "pre") {
                 blob.text().then(res => {
@@ -202,10 +205,8 @@ class File extends React.Component {
             });
     }
 
-    render() {
-        let userForm = null;
-        let errorMessage = null;
-
+    getUserFormHTML() {
+        let userForm = "";
         if (this.state.metadata && this.state.metadata.isUsers) {
             userForm = 
             <form id="metadata-update-form" className="metadata-update-form">
@@ -220,9 +221,10 @@ class File extends React.Component {
                 <button type="button" id="metadata-update-button" className="metadata-update-button" onClick={this.updateFileMetadata}>Update</button>
             </form>;
         }
-        if (this.state.errorMessage) {
-            errorMessage = <p id="update-form-error" className="error-message">{this.state.errorMessage}</p>;
-        }
+        return userForm
+    }
+
+    render() {
         return(
             <div>
                 <p>File Page</p>
@@ -232,8 +234,8 @@ class File extends React.Component {
                 <button type="button" id="delete-button" className="delete-button" onClick={this.deleteFile}>Delete File</button>
                 <button type="button" id="display-button" className="display-button" onClick={() => this.retrieveFile(this.displayFile)}>Display File</button>
                 <br />
-                {errorMessage}
-                {userForm}
+                {this.state.errorMessage !== null && <p id="update-form-error" className="error-message">{this.state.errorMessage}</p>}
+                {this.getUserFormHTML()}
             </div>
         )
     }
