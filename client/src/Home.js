@@ -17,6 +17,7 @@ class Home extends React.Component {
     handleRegister() {
         let username = document.getElementById("username").value;
         let password = document.getElementById("password").value;
+        let displayname = document.getElementById("displayname").value;
         let navigate = this.props.navigate;
 
         if (!username.match(new RegExp(process.env.REACT_APP_USERNAME_VERIFICATION))) {
@@ -32,7 +33,8 @@ class Home extends React.Component {
         else {         
             axios.post(SERVER_URL + process.env.REACT_APP_REGISTER_PATH, {
                     username: username,
-                    password: password
+                    password: password,
+                    displayname: displayname
                 },
                 {
                     withCredentials: true
@@ -69,13 +71,13 @@ class Home extends React.Component {
             });
     }
     render() {
-        console.log(SERVER_URL + process.env.REACT_APP_REGISTER_PATH)
         let errorMessage = this.state["errorMessage"] || null;
         return (
         <div className="login-form">
             {errorMessage !== null && <p id="message" className="error-message">{errorMessage}</p>}
-            <input type="text" placeholder="username" id="username" />
-            <input type="password" placeholder="password" id="password" />
+            <input type="text" placeholder="Display Name" id="displayname" />
+            <input type="text" placeholder="Username" id="username" />
+            <input type="password" placeholder="Password" id="password" />
             <button type="button" id="login-button" className="login-button" onClick={this.handleLogin}>Login</button>
             <button type="button" id="register-button" className="register-button" onClick={this.handleRegister}>Register Account</button>
         </div>

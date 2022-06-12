@@ -56,3 +56,35 @@
     border: 5px solid black;
     border-radius: 15px;
 }
+
+.users-display {
+    display: flex;
+    flex-direction: row;
+}
+
+.trusted-users-display {
+    height: 100px;
+    width: 200px;
+    overflow: auto;
+    word-break: normal;
+    word-wrap: normal;
+    white-space: pre;
+    border: 5px solid black;
+}
+
+.searched-users-display {
+    height: 100px;
+    width: 200px;
+    overflow: auto;
+    word-break: normal;
+    word-wrap: normal;
+    white-space: pre;
+    border: 5px solid black;
+}
+
+.user-item-display {
+    background-color:cadetblue;
+    display: flex;
+    flex-direction: row;
+    cursor: pointer;
+}

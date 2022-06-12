@@ -20,16 +20,20 @@ class User extends React.Component {
             totalFiles: null,
             filesInput: 1,
             usersInput: "",
-            trustedUsers: {}
+            trustedUsers: {},
+            displayname: null
         };
 
         this.handleUpload = this.handleUpload.bind(this);
         this.getFilePage = this.getFilePage.bind(this);
         this.handlePageEnter = this.filePageInputKeyDown.bind(this);
-        this.getFileHTMLDisplay = this.getFileDisplayHTML.bind(this);
+        this.getFileDisplayHTML = this.getFileDisplayHTML.bind(this);
+        this.getFileUploadFormHTML = this.getFileUploadFormHTML.bind(this);
+        this.displayName = this.displayName.bind(this);
     }
 
     componentDidMount() {
+        this.displayName();
         this.getFilePage(1)();
     }
 
@@ -39,18 +43,33 @@ class User extends React.Component {
         }
     }
 
+    displayName() {
+        axios({
+            method: "get",
+            url: SERVER_URL + process.env.REACT_APP_DISPLAYNAME_PATH,
+            withCredentials: true
+            })
+            .then(res => {
+                this.setState({ displayname: res.data.displayname });
+            })
+            .catch(err => {
+                console.error(err);
+            })
+    }
+
     handleUpload() {
         let file = document.getElementById("file-input").files[0];
-        let trustedUsers = document.getElementById("trusted-users-input").value;
         let comment = document.getElementById("comment-input").value;
         let privacy = document.getElementById("privacy-input").value;
+        console.log(this.state.trustedUsers);
+        console.log(Object.values(this.state.trustedUsers).map(x => x._id))
 
         axios({
             method: "post",
             url: SERVER_URL + process.env.REACT_APP_UPLOAD_PATH,
             data: { 
                 userFile: file,
-                trustedUsers: trustedUsers,
+                trustedUsers: JSON.stringify(Object.values(this.state.trustedUsers)),
                 comment: comment,
                 privacy: privacy
             },
@@ -184,14 +203,34 @@ class User extends React.Component {
                        onChange={e => {this.getUsersPage(e.target.value, this.state.usersPage)()}}
                        maxLength="500"
                 />
-                {this.state.searchedUsers.map(user => {
-                    return <p key={user._id + "10"}>{user.username + ": " + user._id}</p>
-                })}
-                <br />
-                <br />
-                {Object.values(this.state.trustedUsers).map(user => {
-                    return <p key={user._id}>{user.username + " " + user._id}</p>
-                })}
+                <div className="users-display">
+                    <div className="searched-users-display">
+                        {this.state.searchedUsers.map(user => {
+                            return (
+                                <div key={user._id + "_searched"} className="user-item-display" onClick={() => {
+                                    let trustedUsers = this.state.trustedUsers;
+                                    trustedUsers[user._id] = user;
+                                    this.setState({ trustedUsers: trustedUsers });
+                                }}>
+                                    {user.displayname + ": " + user._id}
+                                </div>
+                            )
+                        })}
+                    </div>
+                    <div className="trusted-users-display">
+                        {Object.values(this.state.trustedUsers).map(user => {
+                            return (
+                                <div key={user._id + "_trusted"} className="user-item-display" onClick={() => {
+                                    let trustedUsers = this.state.trustedUsers;
+                                    delete trustedUsers[user._id];
+                                    this.setState({ trustedUsers: trustedUsers });
+                                }}>
+                                    {user.displayname + ": " + user._id}
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
                 <input type="text" id="comment-input" className="comment-input" name="comment" defaultValue="" maxLength="500" />
                 <input type="reset" id="file-reset-button" className="file-reset-button" value="Reset" />
                 <button type="button" id="file-upload-button" className="file-upload-button" onClick={this.handleUpload}>Submit</button>
@@ -202,7 +241,7 @@ class User extends React.Component {
     render() {
         return (
             <div className="user-page">
-                <p>Hello user user</p>
+                { this.state.displayname !== null && <p>Hello user {this.state.displayname}</p> }
                 {this.getFileUploadFormHTML()}
                 {this.getFileDisplayHTML()}
             </div>

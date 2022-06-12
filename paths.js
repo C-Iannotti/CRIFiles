@@ -21,7 +21,7 @@ function main(app, database) {
     const fileCollection = database.collection("files");
     const fileBucket = new MongoDB.GridFSBucket(database, { bucketName: "file-bucket"});
 
-    userCollection.createIndex( { username: "text" })
+    userCollection.createIndex( { displayname: "text" })
     fileCollection.createIndex( { fileName: "text" })
 
     //API path for registering a user
@@ -29,6 +29,7 @@ function main(app, database) {
         function(req, res, next) {
             const username = req.body.username;
             const password = req.body.password;
+            const displayname = req.body.displayname
 
             userCollection.findOne({
                     username: username
@@ -40,7 +41,8 @@ function main(app, database) {
                         const hash = bcrypt.hashSync(password, salt);
                         userCollection.insertOne({
                                 username: username,
-                                password: hash
+                                password: hash,
+                                displayname: displayname
                             },
                             function(err, doc) {
                                 if(err) res.status(400).send();
@@ -65,13 +67,20 @@ function main(app, database) {
         }
     );
 
-    //API for getting page of users with a given text in username
+    //API path for retrieving a display name
+    app.get(process.env.DISPLAYNAME_PATH,
+        function(req, res) {
+            if (req.user !== null) res.json({ displayname: req.user.displayname })
+            else res.json({ displayname: null })
+        })
+
+    //API for getting page of users with a given text in displayname or id
     app.get(process.env.RETRIEVE_USERS_PATH + "/:userText/:pageNum",
         ensureAuthenticated(),
         function(req, res) {
             userCollection.find({
                     $or: [
-                    { username: {
+                    { displayname: {
                         $regex: "^" + req.params.userText
                     }},
                     { _id: {
@@ -85,7 +94,10 @@ function main(app, database) {
                     if (err || docs === null) res.status(500).send()
                     else {
                         res.json({
-                            users: docs
+                            users: docs.map(x => ({
+                                displayname: x.displayname,
+                                _id: x._id
+                            }))
                         });
                     }
                 })
