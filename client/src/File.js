@@ -13,6 +13,10 @@ class File extends React.Component {
         super(props);
         this.state = {
             metadata: null,
+            searchedUsers: [],
+            usersPage: 1,
+            usersController: null,
+            usersInput: "",
             tag: null
         };
 
@@ -22,14 +26,15 @@ class File extends React.Component {
         this.deleteFile = this.deleteFile.bind(this);
         this.checkFile = this.checkFile.bind(this);
         this.updateFileMetadata = this.updateFileMetadata.bind(this);
-        this.getUserFormHTML =this.getUserFormHTML.bind(this);
+        this.getUserFormHTML = this.getUpdateFormHTML.bind(this);
+        this.getFileMetadata = this.getFileMetadata.bind(this);
     }
 
     componentDidMount() {
         this.checkFile();
     }
 
-    checkFile() {
+    getFileMetadata(userFunction=(res => {return})) {
         axios({
             method: "get",
             url: SERVER_URL
@@ -39,26 +44,32 @@ class File extends React.Component {
             withCredentials: true
             })
             .then(res => {
+                res.data.trustedUsers = JSON.parse(res.data.trustedUsers)
                 this.setState({ metadata: res.data});
-
-                if (res.status === 500) {
-                    this.props.useDatabase(db => {
-                        let request = db.transaction([DB_STORE_NAME], "readwrite")
-                                        .objectStore(DB_STORE_NAME)
-                                        .delete(this.props.params.fileId);
-                        request.onerror = event => {
-                            console.error("Unable to delete local file: " + event.target.errorCode);
-                        }
-                        request.onsuccess = event => {
-                            console.log("Successfully deleted local file: " + event.target.result);
-                        }
-                    });
-                    this.props.navigate(-1);
-                }
-                else if (res.data.size <= process.env.REACT_APP_MAX_FILE_SIZE) {
-                    this.retrieveFile(this.displayFile);
-                }
+                userFunction(res);
             });
+    }
+
+    checkFile() {
+        this.getFileMetadata(res => {
+            if (res.status === 500) {
+                this.props.useDatabase(db => {
+                    let request = db.transaction([DB_STORE_NAME], "readwrite")
+                                    .objectStore(DB_STORE_NAME)
+                                    .delete(this.props.params.fileId);
+                    request.onerror = event => {
+                        console.error("Unable to delete local file: " + event.target.errorCode);
+                    }
+                    request.onsuccess = event => {
+                        console.log("Successfully deleted local file: " + event.target.result);
+                    }
+                });
+                this.props.navigate(-1);
+            }
+            else if (res.data.size <= process.env.REACT_APP_MAX_FILE_SIZE) {
+                this.retrieveFile(this.displayFile);
+            }
+        })
     }
 
     retrieveFile(userFunction) {
@@ -180,7 +191,6 @@ class File extends React.Component {
     }
 
     updateFileMetadata() {
-        let trustedUsers = document.getElementById("trusted-users-input").value;
         let comment = document.getElementById("comment-input").value;
         let privacy = document.getElementById("privacy-input").value;
 
@@ -189,7 +199,7 @@ class File extends React.Component {
             url: SERVER_URL + process.env.REACT_APP_UPDATE_METADATA_PATH,
             data: {
                 fileId: this.props.params.fileId,
-                trustedUsers: trustedUsers,
+                trustedUsers: JSON.stringify(this.state.metadata.trustedUsers),
                 comment: comment,
                 privacy: privacy
             },
@@ -200,12 +210,44 @@ class File extends React.Component {
                     this.setState({ errorMessage: "Unable to update file's metadata" })
                 }
                 else {
-                    this.setState({ metadata: res.data })
+                    this.getFileMetadata();
                 }
             });
     }
 
-    getUserFormHTML() {
+    getUsersPage(userString, pageNumber) {
+        return() => {
+            if (this.state.usersController !== null) this.state.usersController.abort();
+            this.setState({
+                searchedUsers: [],
+                usersController: new AbortController(),
+                usersInput: userString,
+                usersPage: pageNumber
+            }, err => {
+                if (err) console.error(err)
+                if (userString && pageNumber >= 1) {
+                    axios({
+                            method: "get",
+                            url: SERVER_URL + process.env.REACT_APP_RETRIEVE_USERS_PATH
+                                + "/" + this.state.usersInput + "/" + String(this.state.usersPage - 1),
+                            withCredentials: true,
+                            signal: this.state.usersController.signal
+                        })
+                        .then(res => {
+                            this.setState({
+                                searchedUsers: res.data.users,
+                                usersController: null
+                            })
+                        })
+                        .catch(err => {
+                            console.error(err);
+                        });
+                }
+            })
+        }
+    }
+
+    getUpdateFormHTML() {
         let userForm = "";
         if (this.state.metadata && this.state.metadata.isUsers) {
             userForm = 
@@ -215,7 +257,42 @@ class File extends React.Component {
                     <option value="shared">Shared</option>
                     <option value="public">Public</option>
                 </select>
-                <input type="text" id="trusted-users-input" className="trusted-users-input" defaultValue={this.state.metadata.trustedUsers} maxLength="500" />
+                <input type="text"
+                       id="trusted-users-input"
+                       className="trusted-users-input"
+                       name="trustedUsers"
+                       value={this.state.usersInput}
+                       onChange={e => {this.getUsersPage(e.target.value, this.state.usersPage)()}}
+                       maxLength="500"
+                />
+                <div className="users-display">
+                    <div className="searched-users-display">
+                        {this.state.searchedUsers.map(user => {
+                            return (
+                                <div key={user._id + "_searched"} className="user-item-display" onClick={() => {
+                                    let trustedUsers = this.state.metadata.trustedUsers;
+                                    trustedUsers[user._id] = user;
+                                    this.setState({ trustedUsers: trustedUsers });
+                                }}>
+                                    {user.displayname + ": " + user._id}
+                                </div>
+                            )
+                        })}
+                    </div>
+                    <div className="trusted-users-display">
+                        {Object.values(this.state.metadata.trustedUsers).map(user => {
+                            return (
+                                <div key={user._id + "_trusted"} className="user-item-display" onClick={() => {
+                                    let trustedUsers = this.state.metadata.trustedUsers;
+                                    delete trustedUsers[user._id];
+                                    this.setState({ trustedUsers: trustedUsers });
+                                }}>
+                                    {user.displayname + ": " + user._id}
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
                 <input type="text" id="comment-input" className="comment-input" defaultValue={this.state.metadata.comment} maxLength="500" />
                 <input type="reset" id="metadata-reset-button" className="metadata-reset-button" value="Reset" />
                 <button type="button" id="metadata-update-button" className="metadata-update-button" onClick={this.updateFileMetadata}>Update</button>
@@ -235,7 +312,7 @@ class File extends React.Component {
                 <button type="button" id="display-button" className="display-button" onClick={() => this.retrieveFile(this.displayFile)}>Display File</button>
                 <br />
                 {this.state.errorMessage !== null && <p id="update-form-error" className="error-message">{this.state.errorMessage}</p>}
-                {this.getUserFormHTML()}
+                {this.getUpdateFormHTML()}
             </div>
         )
     }

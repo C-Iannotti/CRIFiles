@@ -61,15 +61,13 @@ class User extends React.Component {
         let file = document.getElementById("file-input").files[0];
         let comment = document.getElementById("comment-input").value;
         let privacy = document.getElementById("privacy-input").value;
-        console.log(this.state.trustedUsers);
-        console.log(Object.values(this.state.trustedUsers).map(x => x._id))
 
         axios({
             method: "post",
             url: SERVER_URL + process.env.REACT_APP_UPLOAD_PATH,
             data: { 
                 userFile: file,
-                trustedUsers: JSON.stringify(Object.values(this.state.trustedUsers)),
+                trustedUsers: JSON.stringify(this.state.trustedUsers),
                 comment: comment,
                 privacy: privacy
             },
@@ -77,6 +75,7 @@ class User extends React.Component {
             withCredentials: true,
             })
             .then(res => {
+                console.log(res)
                 this.getFilePage(this.state.filesPage)();
             })
             .catch(err => {

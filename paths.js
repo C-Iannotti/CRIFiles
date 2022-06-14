@@ -256,18 +256,7 @@ function main(app, database) {
                 function(err, doc) {
                     if (err || doc === null) res.status(500).send();
                     else {
-                        doc = doc.value
-                        res.json({
-                            userId: doc.user,
-                            fileId: doc._id,
-                            filename: doc.fileName,
-                            privacy: doc.privacy,
-                            trustedUsers: doc.trustedUsers,
-                            size: doc.size,
-                            mimetype: doc.mimetype,
-                            isUsers: doc.user.toString() === req.user._id.toString(),
-                            comment: doc.comment
-                        });
+                        res.status(204).send();
                     };
                 }
             );
