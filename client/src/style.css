@@ -57,6 +57,10 @@
     border-radius: 15px;
 }
 
+.img-display {
+    width: 500px;
+}
+
 .users-display {
     display: flex;
     flex-direction: row;

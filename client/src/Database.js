@@ -26,8 +26,6 @@ function useDatabase(userFunction) {
                 DB_STORE_NAME, { keyPath: "fileId" }
             );
 
-            store.createIndex("filename", "filename", { unique: false });
-            store.createIndex("mimetype", "mimetype", { unique: false });
             store.createIndex("blob", "blob", { unique: false });
         }
         return null;

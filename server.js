@@ -21,7 +21,6 @@ const SESSION_SECRET = process.env.SESSION_SECRET;
 //Sets express properties: including engine, url reading and encoding,
 // and the React App
 const app = express();
-app.set("view engine", "ejs");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("./client/build"));
@@ -32,7 +31,7 @@ app.use(
         origin: process.env.WHITELISTED_DEV,
         methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
         credentials: true,
-        exposedHeaders: "Content-Disposition,filename"
+        exposedHeaders: "Content-Disposition"
     })
 )
 

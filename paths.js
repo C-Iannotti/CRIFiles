@@ -78,14 +78,20 @@ function main(app, database) {
     app.get(process.env.RETRIEVE_USERS_PATH + "/:userText/:pageNum",
         ensureAuthenticated(),
         function(req, res) {
+            let objectId;
+            try {
+                objectId = MongoDB.ObjectId(req.params.userText)
+            }
+            catch {
+                objectId = ""
+            }
             userCollection.find({
                     $or: [
-                    { displayname: {
-                        $regex: "^" + req.params.userText
-                    }},
-                    { _id: {
-                        $regex: "^" + req.params.userText
-                    }}]
+                        { displayname: {
+                            $regex: "^" + req.params.userText
+                        }},
+                        { _id: objectId }
+                    ]
                 },
                 {
                     limit: process.env.PAGE_SIZE,
@@ -184,8 +190,6 @@ function main(app, database) {
             cursor.next((err, doc) => {
                 if (err || !doc) res.status(500).send();
                 else {
-                    res.append("Content-Type", doc.metadata.mimetype);
-                    res.append("filename", doc.metadata.name);
                     fileBucket.openDownloadStream(MongoDB.ObjectId(req.params.fileId))
                         .pipe(res);
                 }

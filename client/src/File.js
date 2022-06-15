@@ -17,6 +17,8 @@ class File extends React.Component {
             usersPage: 1,
             usersController: null,
             usersInput: "",
+            commentInput: "",
+            
             tag: null
         };
 
@@ -34,7 +36,7 @@ class File extends React.Component {
         this.checkFile();
     }
 
-    getFileMetadata(userFunction=(res => {return})) {
+    getFileMetadata(userFunction=(() => { return })) {
         axios({
             method: "get",
             url: SERVER_URL
@@ -105,8 +107,6 @@ class File extends React.Component {
 
                             let req2 = transaction.objectStore(DB_STORE_NAME).add({
                                 fileId: this.props.params.fileId,
-                                filename: res.headers["filename"],
-                                mimetype: res.headers["content-type"],
                                 blob: res.data
                             });
                             req2.onsuccess = event => {
@@ -134,7 +134,7 @@ class File extends React.Component {
         let a = $("<a style='display: none;'/>");
         let url = window.URL.createObjectURL(blob);
         a.attr("href", url);
-        a.attr("download", this.props.params.fileId);
+        a.attr("download", this.state.metadata.filename);
         $("body").append(a);
         a[0].click();
         window.URL.revokeObjectURL(url);
