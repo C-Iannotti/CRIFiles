@@ -107,15 +107,16 @@ function main(app, database) {
                     }
                 },
                 {
-                    limit: process.env.PAGE_SIZE,
+                    limit: process.env.PAGE_SIZE + 1,
                     skip: Number(process.env.PAGE_SIZE) * Number(req.params.pageNum)
                 }).toArray((err, docs) => {
                     if (err || docs === null) res.status(500).send()
                     else {
                         res.json({
-                            users: docs.map(x => ({
+                            users: docs.slice(0, process.env.PAGE_SIZE).map(x => ({
                                 displayname: x.displayname,
-                                _id: x._id
+                                _id: x._id,
+                                moreSearchedUsers: docs.length === process.env.PAGE_SIZE + 1
                             }))
                         });
                     }

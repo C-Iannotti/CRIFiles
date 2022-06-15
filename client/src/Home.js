@@ -1,6 +1,6 @@
 import React from "react";
 import axios from "axios";
-import { withWrapper } from "./comonentWrapper";
+import { withWrapper } from "./componentWrapper";
 import "./style.css";
 
 const SERVER_URL = process.env.REACT_APP_PROTOCOL

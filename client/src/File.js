@@ -1,8 +1,13 @@
 import React from "react";
 import axios from "axios";
 import "./style.css";
-import { withWrapper } from "./comonentWrapper";
+import { withWrapper } from "./componentWrapper";
 import $ from "jquery";
+import {
+    getUsersPage,
+    getFileMetadata,
+    deleteFile
+} from "./utils.js"
 
 const SERVER_URL = process.env.REACT_APP_PROTOCOL
     + process.env.REACT_APP_DOMAIN;
@@ -14,44 +19,29 @@ class File extends React.Component {
         this.state = {
             metadata: null,
             searchedUsers: [],
-            usersPage: 1,
+            searchedUsersPage: 1,
             usersController: null,
             usersInput: "",
             tag: null
         };
 
+        this.getUsersPage = getUsersPage.bind(this);
+        this.getFileMetadata = getFileMetadata.bind(this);
+        this.deleteFile = deleteFile.bind(this);
         this.displayFile = this.displayFile.bind(this);
         this.downloadFile = this.downloadFile.bind(this);
         this.retrieveFile = this.retrieveFile.bind(this);
-        this.deleteFile = this.deleteFile.bind(this);
         this.checkFile = this.checkFile.bind(this);
         this.updateFileMetadata = this.updateFileMetadata.bind(this);
         this.getUserFormHTML = this.getUpdateFormHTML.bind(this);
-        this.getFileMetadata = this.getFileMetadata.bind(this);
     }
 
     componentDidMount() {
         this.checkFile();
     }
 
-    getFileMetadata(userFunction=(() => { return })) {
-        axios({
-            method: "get",
-            url: SERVER_URL
-                 + process.env.REACT_APP_RETRIEVE_METADATA_PATH
-                 + "/"
-                 + this.props.params.fileId,
-            withCredentials: true
-            })
-            .then(res => {
-                res.data.trustedUsers = JSON.parse(res.data.trustedUsers)
-                this.setState({ metadata: res.data});
-                userFunction(res);
-            });
-    }
-
     checkFile() {
-        this.getFileMetadata(res => {
+        this.getFileMetadata(this.props.params.fileId, res => {
             if (res.status === 500) {
                 this.props.useDatabase(db => {
                     let request = db.transaction([DB_STORE_NAME], "readwrite")
@@ -171,23 +161,6 @@ class File extends React.Component {
         }
     }
 
-    deleteFile() {
-        axios({
-            method: "delete",
-            url: SERVER_URL
-                 + process.env.REACT_APP_DELETE_FILE_PATH
-                 + "/"
-                 + this.props.params.fileId,
-            withCredentials: true
-            })
-            .then(res => {
-                if (res.status === 204) this.props.navigate(-1);
-                else {
-                    console.log("Unable to delete file")
-                }
-            });
-    }
-
     updateFileMetadata() {
         let comment = document.getElementById("comment-input").value;
         let privacy = document.getElementById("privacy-input").value;
@@ -213,38 +186,6 @@ class File extends React.Component {
             });
     }
 
-    getUsersPage(userString, pageNumber) {
-        return() => {
-            if (this.state.usersController !== null) this.state.usersController.abort();
-            this.setState({
-                searchedUsers: [],
-                usersController: new AbortController(),
-                usersInput: userString,
-                usersPage: pageNumber
-            }, err => {
-                if (err) console.error(err)
-                if (userString && pageNumber >= 1) {
-                    axios({
-                            method: "get",
-                            url: SERVER_URL + process.env.REACT_APP_RETRIEVE_USERS_PATH
-                                + "/" + this.state.usersInput + "/" + String(this.state.usersPage - 1),
-                            withCredentials: true,
-                            signal: this.state.usersController.signal
-                        })
-                        .then(res => {
-                            this.setState({
-                                searchedUsers: res.data.users,
-                                usersController: null
-                            })
-                        })
-                        .catch(err => {
-                            console.error(err);
-                        });
-                }
-            })
-        }
-    }
-
     getUpdateFormHTML() {
         let userForm = "";
         if (this.state.metadata && this.state.metadata.isUsers) {
@@ -264,11 +205,21 @@ class File extends React.Component {
                        className="trusted-users-input"
                        name="trustedUsers"
                        value={this.state.usersInput}
-                       onChange={e => {this.getUsersPage(e.target.value, this.state.usersPage)()}}
+                       onChange={e => {this.getUsersPage(e.target.value, this.state.searchedUsersPage)()}}
                        maxLength="500"
                 />
                 <div className="users-display">
                     <div className="searched-users-display">
+                        <button type="button"
+                                id="previous-searched-users-button"
+                                className="page-button"
+                                onClick={this.getUsersPage(this.state.usersInput, this.state.searchedUsersPage-1)}
+                                >Previous</button>
+                        <button type="button"
+                                id="next-searched-users-button"
+                                className="page-button"
+                                onClick={this.getUsersPage(this.state.usersInput, this.state.searchedUsersPage+1)}
+                                >Next</button>
                         {this.state.searchedUsers.map(user => {
                             return (
                                 <div key={user._id + "_searched"} className="user-item-display" onClick={() => {
@@ -310,7 +261,7 @@ class File extends React.Component {
                 <p><strong>{this.props.params.fileId}</strong></p>
                 <div id="file-display-holder">{this.state.tag}</div>
                 <button type="button" id="download-button" className="download-button" onClick={() => this.retrieveFile(this.downloadFile)}>Download File</button>
-                <button type="button" id="delete-button" className="delete-button" onClick={this.deleteFile}>Delete File</button>
+                <button type="button" id="delete-button" className="delete-button" onClick={this.deleteFile(this.props.params.fileId)}>Delete File</button>
                 <button type="button" id="display-button" className="display-button" onClick={() => this.retrieveFile(this.displayFile)}>Display File</button>
                 <br />
                 {this.state.errorMessage !== null && <p id="update-form-error" className="error-message">{this.state.errorMessage}</p>}

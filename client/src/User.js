@@ -1,8 +1,13 @@
 import React from "react";
 import axios from "axios";
 import "./style.css";
-import { withWrapper } from "./comonentWrapper";
+import { withWrapper } from "./componentWrapper";
 import $ from "jquery"
+import {
+    getFilePage,
+    getUsersPage,
+    getDisplayName
+} from "./utils.js"
 
 const SERVER_URL = process.env.REACT_APP_PROTOCOL
     + process.env.REACT_APP_DOMAIN;
@@ -25,16 +30,17 @@ class User extends React.Component {
         };
 
         this.handleUpload = this.handleUpload.bind(this);
-        this.getFilePage = this.getFilePage.bind(this);
+        this.getFilePage = getFilePage.bind(this);
+        this.getUsersPage = getUsersPage.bind(this);
         this.filePageInputKeyDown = this.filePageInputKeyDown.bind(this);
         this.handlePageEnter = this.filePageInputKeyDown.bind(this);
         this.getFileDisplayHTML = this.getFileDisplayHTML.bind(this);
         this.getFileUploadFormHTML = this.getFileUploadFormHTML.bind(this);
-        this.displayName = this.displayName.bind(this);
+        this.getDisplayName = getDisplayName.bind(this);
     }
 
     componentDidMount() {
-        this.displayName();
+        this.getDisplayName();
         this.getFilePage(1)();
     }
 
@@ -42,20 +48,6 @@ class User extends React.Component {
         if (e.key === "Enter") {
             this.getFilePage(Number($("#page-number-input").val()))()
         }
-    }
-
-    displayName() {
-        axios({
-            method: "get",
-            url: SERVER_URL + process.env.REACT_APP_DISPLAYNAME_PATH,
-            withCredentials: true
-            })
-            .then(res => {
-                this.setState({ displayname: res.data.displayname });
-            })
-            .catch(err => {
-                console.error(err);
-            })
     }
 
     handleUpload() {
@@ -86,72 +78,6 @@ class User extends React.Component {
                 console.error(err);
             });
         this.forceUpdate()
-    }
-
-    getFilePage(page) {
-        return () => {
-            if ((this.state.totalFiles === 0 && page === 1) || (page >= 1 && page <= Math.ceil(this.state.totalFiles / process.env.REACT_APP_PAGE_SIZE))) {
-                if (this.state.filesController !== null) this.state.filesController.abort();
-                this.setState(({
-                    searchedFiles: [],
-                    filesPage: page,
-                    filesInput: page,
-                    filesController: new AbortController()
-                }), err => {
-                    if (err) console.error(err)
-                    else {
-                        axios({
-                            method: "get",
-                            url: SERVER_URL + process.env.REACT_APP_USER_FILES_PATH + "/" + (page - 1),
-                            withCredentials: true,
-                            signal: this.state.filesController.signal
-                            })
-                            .then(res => {
-                                this.setState({
-                                    searchedFiles: res.data.files,
-                                    totalFiles: res.data.totalFiles,
-                                    filesController: null
-                                });
-                            })
-                            .catch(err => {
-                                console.error(err);
-                            });
-                    }
-                });
-            }
-        }
-    }
-
-    getUsersPage(userString, pageNumber) {
-        return() => {
-            if (this.state.usersController !== null) this.state.usersController.abort();
-            this.setState({
-                searchedUsers: [],
-                usersController: new AbortController(),
-                usersInput: userString,
-                usersPage: pageNumber
-            }, err => {
-                if (err) console.error(err)
-                if (userString && pageNumber >= 1) {
-                    axios({
-                            method: "get",
-                            url: SERVER_URL + process.env.REACT_APP_RETRIEVE_USERS_PATH
-                                + "/" + this.state.usersInput + "/" + String(this.state.usersPage - 1),
-                            withCredentials: true,
-                            signal: this.state.usersController.signal
-                        })
-                        .then(res => {
-                            this.setState({
-                                searchedUsers: res.data.users,
-                                usersController: null
-                            })
-                        })
-                        .catch(err => {
-                            console.error(err);
-                        });
-                }
-            })
-        }
     }
 
     getFileDisplayHTML() {
@@ -207,6 +133,16 @@ class User extends React.Component {
                 />
                 <div className="users-display">
                     <div className="searched-users-display">
+                        <button type="button"
+                                id="previous-searched-users-button"
+                                className="page-button"
+                                onClick={this.getUsersPage(this.state.usersInput, this.state.searchedUsersPage-1)}
+                                >Previous</button>
+                        <button type="button"
+                                id="next-searched-users-button"
+                                className="page-button"
+                                onClick={this.getUsersPage(this.state.usersInput, this.state.searchedUsersPage+1)}
+                                >Next</button>
                         {this.state.searchedUsers.map(user => {
                             return (
                                 <div key={user._id + "_searched"} className="user-item-display" onClick={() => {
