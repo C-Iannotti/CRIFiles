@@ -107,7 +107,7 @@ function main(app, database) {
                     }
                 },
                 {
-                    limit: process.env.PAGE_SIZE + 1,
+                    limit: Number(process.env.PAGE_SIZE) + 1,
                     skip: Number(process.env.PAGE_SIZE) * Number(req.params.pageNum)
                 }).toArray((err, docs) => {
                     if (err || docs === null) res.status(500).send()
@@ -116,8 +116,8 @@ function main(app, database) {
                             users: docs.slice(0, process.env.PAGE_SIZE).map(x => ({
                                 displayname: x.displayname,
                                 _id: x._id,
-                                moreSearchedUsers: docs.length === process.env.PAGE_SIZE + 1
-                            }))
+                            })),
+                            moreSearchedUsers: docs.length === Number(process.env.PAGE_SIZE) + 1
                         });
                     }
                 });

@@ -20,7 +20,6 @@ class File extends React.Component {
             metadata: null,
             searchedUsers: [],
             searchedUsersPage: 1,
-            usersController: null,
             usersInput: "",
             tag: null
         };
@@ -205,7 +204,7 @@ class File extends React.Component {
                        className="trusted-users-input"
                        name="trustedUsers"
                        value={this.state.usersInput}
-                       onChange={e => {this.getUsersPage(e.target.value, this.state.searchedUsersPage)()}}
+                       onChange={e => {this.getUsersPage(e.target.value, this.state.searchedUsersPage)}}
                        maxLength="500"
                 />
                 <div className="users-display">
@@ -213,12 +212,28 @@ class File extends React.Component {
                         <button type="button"
                                 id="previous-searched-users-button"
                                 className="page-button"
-                                onClick={this.getUsersPage(this.state.usersInput, this.state.searchedUsersPage-1)}
+                                onClick={() => {
+                                        document.getElementById("previous-searched-users-button").setAttribute("disabled", "true")
+                                        document.getElementById("next-searched-users-button").setAttribute("disabled", "true")
+                                        this.getUsersPage(this.state.usersInput, this.state.searchedUsersPage-1, () => {
+                                            document.getElementById("previous-searched-users-button").removeAttribute("disabled")
+                                            document.getElementById("next-searched-users-button").removeAttribute("disabled")
+                                        })
+                                    }
+                                }
                                 >Previous</button>
                         <button type="button"
                                 id="next-searched-users-button"
                                 className="page-button"
-                                onClick={this.getUsersPage(this.state.usersInput, this.state.searchedUsersPage+1)}
+                                onClick={() => {
+                                        document.getElementById("previous-searched-users-button").setAttribute("disabled", "true")
+                                        document.getElementById("next-searched-users-button").setAttribute("disabled", "true")
+                                        this.getUsersPage(this.state.usersInput, this.state.searchedUsersPage+1, () => {
+                                            document.getElementById("previous-searched-users-button").removeAttribute("disabled")
+                                            document.getElementById("next-searched-users-button").removeAttribute("disabled")
+                                        })
+                                    }
+                                }
                                 >Next</button>
                         {this.state.searchedUsers.map(user => {
                             return (

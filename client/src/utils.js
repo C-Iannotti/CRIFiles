@@ -37,42 +37,37 @@ export function getFilePage(page) {
     }
 };
 
-export function getUsersPage(userString, pageNumber) {
-    return() => {
-        console.log(this.state.moreSearchedUsers)
-        console.log(this.state.moreSearchedUsers === undefined)
-        if (pageNumber >= 1 && (this.state.moreSearchedUsers === undefined || this.state.moreSearchedUsers)) {
-            console.log(userString, pageNumber)
-            if (this.state.usersController !== null) this.state.usersController.abort();
-            this.setState({
-                searchedUsers: [],
-                usersController: new AbortController(),
-                usersInput: userString,
-                searchedUsersPage: pageNumber
-            }, err => {
-                if (err) console.error(err)
-                if (userString && pageNumber >= 1) {
-                    axios({
-                            method: "get",
-                            url: SERVER_URL + process.env.REACT_APP_RETRIEVE_USERS_PATH
-                                + "/" + this.state.usersInput + "/" + String(pageNumber - 1),
-                            withCredentials: true,
-                            signal: this.state.usersController.signal
-                        })
-                        .then(res => {
-                            console.log(res.data.users)
-                            this.setState({
-                                searchedUsers: res.data.users,
-                                moreSearchedUsers: res.data.moreSearchedUsers,
-                                usersController: null
-                            })
-                        })
-                        .catch(err => {
-                            console.error(err);
-                        });
-                }
-            })
-        }
+export function getUsersPage(userString, pageNumber, callback=(() => { return })) {
+    if (pageNumber >= 1 &&
+            ((this.state.moreSearchedUsers === false && this.state.searchedUsersPage > pageNumber)
+            || this.state.moreSearchedUsers === undefined || this.state.moreSearchedUsers === true)) {
+        this.setState({
+            searchedUsers: [],
+            usersInput: userString,
+            searchedUsersPage: pageNumber
+        }, err => {
+            if (err) console.error(err)
+            if (userString && pageNumber >= 1) {
+                axios({
+                        method: "get",
+                        url: SERVER_URL + process.env.REACT_APP_RETRIEVE_USERS_PATH
+                            + "/" + this.state.usersInput + "/" + String(pageNumber - 1),
+                        withCredentials: true,
+                    })
+                    .then(res => {
+                        this.setState({
+                            searchedUsers: res.data.users,
+                            moreSearchedUsers: res.data.moreSearchedUsers,
+                        }, () => callback());
+                    })
+                    .catch(err => {
+                        console.error(err);
+                    });
+            }
+        })
+    }
+    else {
+        callback();
     }
 };
 
