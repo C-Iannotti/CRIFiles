@@ -17,7 +17,7 @@ class User extends React.Component {
             usersPage: 1,
             filesController: null,
             usersController: null,
-            totalFiles: null,
+            totalFiles: 0,
             filesInput: 1,
             usersInput: "",
             trustedUsers: {},
@@ -26,6 +26,7 @@ class User extends React.Component {
 
         this.handleUpload = this.handleUpload.bind(this);
         this.getFilePage = this.getFilePage.bind(this);
+        this.filePageInputKeyDown = this.filePageInputKeyDown.bind(this);
         this.handlePageEnter = this.filePageInputKeyDown.bind(this);
         this.getFileDisplayHTML = this.getFileDisplayHTML.bind(this);
         this.getFileUploadFormHTML = this.getFileUploadFormHTML.bind(this);
@@ -76,6 +77,9 @@ class User extends React.Component {
             })
             .then(res => {
                 console.log(res)
+                this.setState({
+                    trustedUsers: {}
+                });
                 this.getFilePage(this.state.filesPage)();
             })
             .catch(err => {
@@ -86,9 +90,8 @@ class User extends React.Component {
 
     getFilePage(page) {
         return () => {
-            if (this.state.totalFiles === null || (page >= 1 && page <= Math.ceil(this.state.totalFiles / process.env.REACT_APP_PAGE_SIZE))) {
+            if ((this.state.totalFiles === 0 && page === 1) || (page >= 1 && page <= Math.ceil(this.state.totalFiles / process.env.REACT_APP_PAGE_SIZE))) {
                 if (this.state.filesController !== null) this.state.filesController.abort();
-                
                 this.setState(({
                     searchedFiles: [],
                     filesPage: page,
@@ -162,7 +165,7 @@ class User extends React.Component {
                             className="page-number-input"
                             value={this.state.filesInput}
                             onKeyDown={this.filePageInputKeyDown}
-                            onChange={e => this.setState({ inputValue: e.target.value })}
+                            onChange={e => this.setState({ filesInput: e.target.value })}
                     />
                     <button type="button" id="next-page-button" className="page-button" onClick={this.getFilePage(this.state.filesPage+1)}>Next</button>
                 </div>

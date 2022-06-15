@@ -17,8 +17,6 @@ class File extends React.Component {
             usersPage: 1,
             usersController: null,
             usersInput: "",
-            commentInput: "",
-            
             tag: null
         };
 
@@ -252,7 +250,11 @@ class File extends React.Component {
         if (this.state.metadata && this.state.metadata.isUsers) {
             userForm = 
             <form id="metadata-update-form" className="metadata-update-form">
-                <select id="privacy-input" className="privacy-input" name="privacy" defaultValue={this.state.metadata.privacy}>
+                <select id="privacy-input"
+                        className="privacy-input"
+                        name="privacy"
+                        defaultValue={this.state.metadata.privacy}
+                        key={this.state.metadata.privacy + "-update-form"}>
                     <option value="private">Private</option>
                     <option value="shared">Shared</option>
                     <option value="public">Public</option>

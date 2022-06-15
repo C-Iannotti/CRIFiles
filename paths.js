@@ -83,15 +83,28 @@ function main(app, database) {
                 objectId = MongoDB.ObjectId(req.params.userText)
             }
             catch {
-                objectId = ""
+                objectId = null
             }
-            userCollection.find({
-                    $or: [
-                        { displayname: {
-                            $regex: "^" + req.params.userText
-                        }},
-                        { _id: objectId }
-                    ]
+
+            if (objectId !== null) {
+                userCollection.findOne({ _id: objectId },
+                (err, doc) => {
+                    if (err || doc === null) res.status(500).send();
+                    else {
+                        res.json({
+                            users: [{
+                                displayname: doc.displayname,
+                                _id: doc._id
+                            }]
+                        })
+                    }
+                });
+            }
+            else {
+                userCollection.find({
+                    displayname: {
+                        $regex: "^" + req.params.userText
+                    }
                 },
                 {
                     limit: process.env.PAGE_SIZE,
@@ -106,7 +119,8 @@ function main(app, database) {
                             }))
                         });
                     }
-                })
+                });
+            }
         })
 
     //API path for uploading a file to database
