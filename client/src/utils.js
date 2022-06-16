@@ -37,7 +37,7 @@ export function getFilePage(page) {
     }
 };
 
-export function getUsersPage(userString, pageNumber, callback=(() => { return })) {
+export function getSearchedUsersPage(userString, pageNumber, callback=(() => { return })) {
     if (pageNumber >= 1 &&
             ((this.state.moreSearchedUsers === false && this.state.searchedUsersPage > pageNumber)
             || this.state.moreSearchedUsers === undefined || this.state.moreSearchedUsers === true)) {
@@ -71,6 +71,40 @@ export function getUsersPage(userString, pageNumber, callback=(() => { return })
     }
 };
 
+export function getTrustedUsersPage(pageNumber, callback=(() => { return })) {
+     console.log(pageNumber)
+     console.log(this.state.trustedUsers)
+    if (pageNumber >= 1 && 
+        pageNumber <= Math.ceil(Object.keys(this.state.trustedUsers).length /
+            Number(process.env.REACT_APP_PAGE_SIZE))) {
+        this.setState({
+            trustedUsersPage: pageNumber,
+            trustedUsersView: Object.values(this.state.trustedUsers).slice(
+                (pageNumber - 1) * Number(process.env.REACT_APP_PAGE_SIZE),
+                pageNumber * Number(process.env.REACT_APP_PAGE_SIZE))
+        }, () => {
+            callback()
+        })
+    }
+    else if (Object.keys(this.state.trustedUsers).length <= (pageNumber - 1) * Number(process.env.REACT_APP_PAGE_SIZE)) {
+        console.log(Math.ceil(Object.keys(this.state.trustedUsers).length /
+        Number(process.env.REACT_APP_PAGE_SIZE)))
+        pageNumber = Math.ceil(Object.keys(this.state.trustedUsers).length /
+        Number(process.env.REACT_APP_PAGE_SIZE))
+        this.setState({
+            trustedUsersPage: pageNumber,
+            trustedUsersView: Object.values(this.state.trustedUsers).slice(
+                (pageNumber - 1) * Number(process.env.REACT_APP_PAGE_SIZE),
+                pageNumber * Number(process.env.REACT_APP_PAGE_SIZE))
+        }, () => {
+            callback()
+        })
+    }
+    else {
+        callback()
+    }
+}
+
 export function getDisplayName(callback=(() => { return })) {
     axios({
         method: "get",
@@ -98,7 +132,7 @@ export function getFileMetadata(fileId, callback=(() => { return })) {
         })
         .then(res => {
             res.data.trustedUsers = JSON.parse(res.data.trustedUsers)
-            this.setState({ metadata: res.data}, () => {
+            this.setState(Object.assign({}, this.state, { metadata: res.data}, res.data), () => {
                 callback(res);
             });
         });

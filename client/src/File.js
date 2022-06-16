@@ -4,9 +4,10 @@ import "./style.css";
 import { withWrapper } from "./componentWrapper";
 import $ from "jquery";
 import {
-    getUsersPage,
+    getSearchedUsersPage,
     getFileMetadata,
-    deleteFile
+    deleteFile,
+    getTrustedUsersPage
 } from "./utils.js"
 
 const SERVER_URL = process.env.REACT_APP_PROTOCOL
@@ -19,14 +20,16 @@ class File extends React.Component {
         this.state = {
             metadata: null,
             searchedUsers: [],
+            trustedUsers: {},
             searchedUsersPage: 1,
             usersInput: "",
             tag: null
         };
 
-        this.getUsersPage = getUsersPage.bind(this);
+        this.getSearchedUsersPage = getSearchedUsersPage.bind(this);
         this.getFileMetadata = getFileMetadata.bind(this);
         this.deleteFile = deleteFile.bind(this);
+        this.getTrustedUsersPage = getTrustedUsersPage.bind(this);
         this.displayFile = this.displayFile.bind(this);
         this.downloadFile = this.downloadFile.bind(this);
         this.retrieveFile = this.retrieveFile.bind(this);
@@ -204,7 +207,7 @@ class File extends React.Component {
                        className="trusted-users-input"
                        name="trustedUsers"
                        value={this.state.usersInput}
-                       onChange={e => {this.getUsersPage(e.target.value, this.state.searchedUsersPage)}}
+                       onChange={e => {this.getSearchedUsersPage(e.target.value, this.state.searchedUsersPage)}}
                        maxLength="500"
                 />
                 <div className="users-display">
@@ -215,7 +218,7 @@ class File extends React.Component {
                                 onClick={() => {
                                         document.getElementById("previous-searched-users-button").setAttribute("disabled", "true")
                                         document.getElementById("next-searched-users-button").setAttribute("disabled", "true")
-                                        this.getUsersPage(this.state.usersInput, this.state.searchedUsersPage-1, () => {
+                                        this.getSearchedUsersPage(this.state.usersInput, this.state.searchedUsersPage-1, () => {
                                             document.getElementById("previous-searched-users-button").removeAttribute("disabled")
                                             document.getElementById("next-searched-users-button").removeAttribute("disabled")
                                         })
@@ -228,7 +231,7 @@ class File extends React.Component {
                                 onClick={() => {
                                         document.getElementById("previous-searched-users-button").setAttribute("disabled", "true")
                                         document.getElementById("next-searched-users-button").setAttribute("disabled", "true")
-                                        this.getUsersPage(this.state.usersInput, this.state.searchedUsersPage+1, () => {
+                                        this.getSearchedUsersPage(this.state.usersInput, this.state.searchedUsersPage+1, () => {
                                             document.getElementById("previous-searched-users-button").removeAttribute("disabled")
                                             document.getElementById("next-searched-users-button").removeAttribute("disabled")
                                         })
@@ -241,6 +244,7 @@ class File extends React.Component {
                                     let trustedUsers = this.state.metadata.trustedUsers;
                                     trustedUsers[user._id] = user;
                                     this.setState({ trustedUsers: trustedUsers });
+                                    this.getTrustedUsersPage(this.state.trustedUsersPage || 1);
                                 }}>
                                     {user.displayname + ": " + user._id}
                                 </div>
@@ -248,12 +252,39 @@ class File extends React.Component {
                         })}
                     </div>
                     <div className="trusted-users-display">
-                        {Object.values(this.state.metadata.trustedUsers).map(user => {
+                        <button type="button"
+                                id="previous-trusted-users-button"
+                                className="page-button"
+                                onClick={() => {
+                                        document.getElementById("previous-trusted-users-button").setAttribute("disabled", "true")
+                                        document.getElementById("next-trusted-users-button").setAttribute("disabled", "true")
+                                        this.getTrustedUsersPage(this.state.trustedUsersPage-1, () => {
+                                            document.getElementById("previous-trusted-users-button").removeAttribute("disabled")
+                                            document.getElementById("next-trusted-users-button").removeAttribute("disabled")
+                                        })
+                                    }
+                                }
+                                >Previous</button>
+                        <button type="button"
+                                id="next-trusted-users-button"
+                                className="page-button"
+                                onClick={() => {
+                                    document.getElementById("previous-trusted-users-button").setAttribute("disabled", "true")
+                                    document.getElementById("next-trusted-users-button").setAttribute("disabled", "true")
+                                    this.getTrustedUsersPage(this.state.trustedUsersPage+1, () => {
+                                        document.getElementById("previous-trusted-users-button").removeAttribute("disabled")
+                                        document.getElementById("next-trusted-users-button").removeAttribute("disabled")
+                                    })
+                                }
+                            }
+                                >Next</button>
+                        {Object.values(this.state.trustedUsersView || {}).map(user => {
                             return (
                                 <div key={user._id + "_trusted"} className="user-item-display" onClick={() => {
                                     let trustedUsers = this.state.metadata.trustedUsers;
                                     delete trustedUsers[user._id];
                                     this.setState({ trustedUsers: trustedUsers });
+                                    this.getTrustedUsersPage(this.state.trustedUsersPage || 1);
                                 }}>
                                     {user.displayname + ": " + user._id}
                                 </div>
