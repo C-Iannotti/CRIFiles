@@ -17,17 +17,8 @@ class User extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            searchedFiles: [],
-            searchedUsers: [],
-            filesPage: 1,
-            usersPage: 1,
-            filesController: null,
-            usersController: null,
-            totalFiles: 0,
             filesInput: 1,
-            usersInput: "",
-            trustedUsers: {},
-            displayname: null
+            usersInput: ""
         };
 
         this.handleUpload = this.handleUpload.bind(this);
@@ -43,12 +34,12 @@ class User extends React.Component {
 
     componentDidMount() {
         this.getDisplayName();
-        this.getFilePage(1)();
+        this.getFilePage(1);
     }
 
     filePageInputKeyDown(e) {
         if (e.key === "Enter") {
-            this.getFilePage(Number($("#page-number-input").val()))()
+            this.getFilePage(Number($("#page-number-input").val()))
         }
     }
 
@@ -74,7 +65,7 @@ class User extends React.Component {
                 this.setState({
                     trustedUsers: {}
                 });
-                this.getFilePage(this.state.filesPage)();
+                this.getFilePage(this.state.filesPage);
             })
             .catch(err => {
                 console.error(err);
@@ -87,7 +78,11 @@ class User extends React.Component {
             <div>
                 {this.state.totalFiles !== null && <p>{this.state.totalFiles}</p>}
                 <div id="page-navigator" className="page-navigator">
-                    <button type="button" id="previous-page-button" className="page-button" onClick={this.getFilePage(this.state.filesPage-1)}>Previous</button>
+                    <button type="button"
+                            id="previous-page-button"
+                            className="page-button"
+                            onClick={() => { this.getFilePage(this.state.filesPage-1) }}
+                            >Previous</button>
                     <input  type="text"
                             id="page-number-input"
                             className="page-number-input"
@@ -95,9 +90,13 @@ class User extends React.Component {
                             onKeyDown={this.filePageInputKeyDown}
                             onChange={e => this.setState({ filesInput: e.target.value })}
                     />
-                    <button type="button" id="next-page-button" className="page-button" onClick={this.getFilePage(this.state.filesPage+1)}>Next</button>
+                    <button type="button"
+                            id="next-page-button"
+                            className="page-button"
+                            onClick={() => { this.getFilePage(this.state.filesPage+1) }}
+                            >Next</button>
                 </div>
-                {this.state.searchedFiles.map(file => {
+                {(this.state.searchedFiles || []).map(file => {
                     return (
                         <div key={file._id} className="file-meta-data">
                             <p><strong>{file._id}</strong></p>
@@ -130,7 +129,7 @@ class User extends React.Component {
                        className="trusted-users-input"
                        name="trustedUsers"
                        value={this.state.usersInput}
-                       onChange={e => {this.getSearchedUsersPage(e.target.value, this.state.usersPage)}}
+                       onChange={e => {this.getSearchedUsersPage(e.target.value, this.state.searchedUsersPage || 1)}}
                        maxLength="500"
                 />
                 <div className="users-display">
@@ -161,13 +160,14 @@ class User extends React.Component {
                                 }
                             }
                                 >Next</button>
-                        {this.state.searchedUsers.map(user => {
+                        {(this.state.searchedUsers || []).map(user => {
                             return (
                                 <div key={user._id + "_searched"} className="user-item-display" onClick={() => {
-                                    let trustedUsers = this.state.trustedUsers;
+                                    let trustedUsers = this.state.trustedUsers || {};
                                     trustedUsers[user._id] = user;
-                                    this.setState({ trustedUsers: trustedUsers });
-                                    this.getTrustedUsersPage(this.state.trustedUsersPage || 1);
+                                    this.setState({ trustedUsers: trustedUsers }, () => {
+                                        this.getTrustedUsersPage(this.state.trustedUsersPage || 1);
+                                    });
                                 }}>
                                     {user.displayname + ": " + user._id}
                                 </div>
@@ -201,13 +201,14 @@ class User extends React.Component {
                                 }
                             }
                                 >Next</button>
-                        {this.state.trustedUsersView && Object.values(this.state.trustedUsersView).map(user => {
+                        {Object.values(this.state.trustedUsersView || {}).map(user => {
                             return (
                                 <div key={user._id + "_trusted"} className="user-item-display" onClick={() => {
                                     let trustedUsers = this.state.trustedUsers;
                                     delete trustedUsers[user._id];
-                                    this.setState({ trustedUsers: trustedUsers });
-                                    this.getTrustedUsersPage(this.state.trustedUsersPage || 1);
+                                    this.setState({ trustedUsers: trustedUsers }, () => {
+                                        this.getTrustedUsersPage(this.state.trustedUsersPage || 1);
+                                    });
                                 }}>
                                     {user.displayname + ": " + user._id}
                                 </div>
@@ -225,7 +226,7 @@ class User extends React.Component {
     render() {
         return (
             <div className="user-page">
-                { this.state.displayname !== null && <p>Hello user {this.state.displayname}</p> }
+                { this.state.displayname && <p>Hello user {this.state.displayname}</p> }
                 {this.getFileUploadFormHTML()}
                 {this.getFileDisplayHTML()}
             </div>

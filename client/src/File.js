@@ -18,9 +18,6 @@ class File extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            searchedUsers: [],
-            trustedUsers: {},
-            searchedUsersPage: 1,
             usersInput: "",
             tag: null
         };
@@ -206,7 +203,7 @@ class File extends React.Component {
                        className="trusted-users-input"
                        name="trustedUsers"
                        value={this.state.usersInput}
-                       onChange={e => {this.getSearchedUsersPage(e.target.value, this.state.searchedUsersPage)}}
+                       onChange={e => {this.getSearchedUsersPage(e.target.value, 1)}}
                        maxLength="500"
                 />
                 <div className="users-display">
@@ -237,7 +234,7 @@ class File extends React.Component {
                                     }
                                 }
                                 >Next</button>
-                        {this.state.searchedUsers.map(user => {
+                        {(this.state.searchedUsers || []).map(user => {
                             return (
                                 <div key={user._id + "_searched"} className="user-item-display" onClick={() => {
                                     let trustedUsers = this.state.trustedUsers;

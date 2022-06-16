@@ -3,48 +3,51 @@ import axios from "axios";
 const SERVER_URL = process.env.REACT_APP_PROTOCOL
     + process.env.REACT_APP_DOMAIN;
 
-export function getFilePage(page) {
-    return () => {
-        if ((this.state.totalFiles === 0 && page === 1) || (page >= 1 && page <= Math.ceil(this.state.totalFiles / process.env.REACT_APP_PAGE_SIZE))) {
-            if (this.state.filesController !== null) this.state.filesController.abort();
-            this.setState(({
-                searchedFiles: [],
-                filesPage: page,
-                filesInput: page,
-                filesController: new AbortController()
-            }), err => {
-                if (err) console.error(err)
-                else {
-                    axios({
-                        method: "get",
-                        url: SERVER_URL + process.env.REACT_APP_USER_FILES_PATH + "/" + (page - 1),
-                        withCredentials: true,
-                        signal: this.state.filesController.signal
-                        })
-                        .then(res => {
-                            this.setState({
-                                searchedFiles: res.data.files,
-                                totalFiles: res.data.totalFiles,
-                                filesController: null
-                            });
-                        })
-                        .catch(err => {
-                            console.error(err);
+export function getFilePage(page, callback=(() => { return })) {
+    if ((page === 1) || (page > 1 && page <= Math.ceil(this.state.totalFiles / process.env.REACT_APP_PAGE_SIZE))) {
+        if (this.state.filesController !== undefined) this.state.filesController.abort();
+        this.setState(({
+            searchedFiles: [],
+            filesPage: page,
+            filesInput: page,
+            filesController: new AbortController()
+        }), err => {
+            if (err) console.error(err)
+            else {
+                axios({
+                    method: "get",
+                    url: SERVER_URL + process.env.REACT_APP_USER_FILES_PATH + "/" + (page - 1),
+                    withCredentials: true,
+                    signal: this.state.filesController.signal
+                    })
+                    .then(res => {
+                        this.setState({
+                            searchedFiles: res.data.files,
+                            totalFiles: res.data.totalFiles,
+                            filesController: undefined
                         });
-                }
-            });
-        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                    });
+            }
+        });
+    }
+    else {
+        callback();
     }
 };
 
 export function getSearchedUsersPage(userString, pageNumber, callback=(() => { return })) {
     if (pageNumber >= 1 &&
             ((this.state.moreSearchedUsers === false && this.state.searchedUsersPage > pageNumber)
-            || this.state.moreSearchedUsers === undefined || this.state.moreSearchedUsers === true)) {
+            || (this.state.moreSearchedUsers === undefined && userString !== "")
+            || this.state.moreSearchedUsers === true)) {
         this.setState({
             searchedUsers: [],
             usersInput: userString,
-            searchedUsersPage: pageNumber
+            searchedUsersPage: pageNumber,
+            moreSearchedUsers: undefined
         }, err => {
             if (err) console.error(err)
             if (userString && pageNumber >= 1) {
@@ -64,6 +67,16 @@ export function getSearchedUsersPage(userString, pageNumber, callback=(() => { r
                         console.error(err);
                     });
             }
+        })
+    }
+    else if (userString === "") {
+        this.setState({
+            searchedUsers: [],
+            usersInput: userString,
+            searchedUsersPage: 1,
+            moreSearchedUsers: undefined
+        }, () => {
+            callback();
         })
     }
     else {
@@ -93,11 +106,11 @@ export function getTrustedUsersPage(pageNumber, callback=(() => { return })) {
                 (pageNumber - 1) * Number(process.env.REACT_APP_PAGE_SIZE),
                 pageNumber * Number(process.env.REACT_APP_PAGE_SIZE))
         }, () => {
-            callback()
+            callback();
         })
     }
     else {
-        callback()
+        callback();
     }
 }
 
