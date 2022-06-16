@@ -53,7 +53,7 @@ class User extends React.Component {
             url: SERVER_URL + process.env.REACT_APP_UPLOAD_PATH,
             data: { 
                 userFile: file,
-                trustedUsers: JSON.stringify(this.state.trustedUsers),
+                trustedUsers: JSON.stringify(this.state.trustedUsers || {}),
                 comment: comment,
                 privacy: privacy
             },
@@ -61,7 +61,6 @@ class User extends React.Component {
             withCredentials: true,
             })
             .then(res => {
-                console.log(res)
                 this.setState({
                     trustedUsers: {}
                 });

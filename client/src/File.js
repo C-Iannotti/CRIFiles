@@ -12,6 +12,8 @@ import {
 
 const SERVER_URL = process.env.REACT_APP_PROTOCOL
     + process.env.REACT_APP_DOMAIN;
+const APP_URL = (process.env.REACT_APP_DEPLOYMENT === "development"
+    ? process.env.REACT_APP_DEV_URL : SERVER_URL);
 const DB_STORE_NAME = process.env.REACT_APP_IDB_STORE_NAME;
 
 class File extends React.Component {
@@ -32,6 +34,7 @@ class File extends React.Component {
         this.checkFile = this.checkFile.bind(this);
         this.updateFileMetadata = this.updateFileMetadata.bind(this);
         this.getUserFormHTML = this.getUpdateFormHTML.bind(this);
+        this.getShareableUrlHTML = this.getShareableUrlHTML.bind(this);
     }
 
     componentDidMount() {
@@ -39,9 +42,9 @@ class File extends React.Component {
     }
 
     checkFile() {
-        this.getFileMetadata(this.props.params.fileId, res => {
-            this.getTrustedUsersPage(1)
-            if (res.status === 500) {
+        this.getFileMetadata(this.props.params.fileId, this.props.token, res => {
+            this.getTrustedUsersPage(1);
+            if (res.status === 500 || !res.data.isAccessible) {
                 this.props.useDatabase(db => {
                     let request = db.transaction([DB_STORE_NAME], "readwrite")
                                     .objectStore(DB_STORE_NAME)
@@ -73,13 +76,14 @@ class File extends React.Component {
                 let cursor = event.target.result;
                 if (!cursor) {
                     axios({
-                        method: "get",
-                        url: SERVER_URL
-                             + process.env.REACT_APP_RETRIEVE_FILE_PATH
-                             + "/"
-                             + this.props.params.fileId,
+                        method: "post",
+                        url: SERVER_URL + process.env.REACT_APP_RETRIEVE_FILE_PATH,
                         withCredentials: true,
-                        responseType: "blob"
+                        responseType: "blob",
+                        data: {
+                            fileId: this.props.params.fileId,
+                            token: this.props.params.token
+                        }
                         })
                         .then(res => {
                             let transaction = db.transaction([DB_STORE_NAME], "readwrite");
@@ -296,6 +300,26 @@ class File extends React.Component {
         return userForm
     }
 
+    getShareableUrlHTML() {
+        return (
+            <div id="shareable-url-container" className="shareable-url-container">
+                <input type="text"
+                    id="shareable-url"
+                    className="shareable-url"
+                    value={APP_URL + "/file" 
+                            + "/" + this.props.params.fileId
+                            + "/" + this.state.token}
+                />
+                <button type="button"
+                        id="token-update-button"
+                        className="token-update-button"
+                        onClick={this.createNewToken}
+                        readOnly
+                        >New Url</button>
+            </div>
+        )
+    }
+
     render() {
         return(
             <div>
@@ -308,6 +332,7 @@ class File extends React.Component {
                 <br />
                 {this.state.errorMessage !== null && <p id="update-form-error" className="error-message">{this.state.errorMessage}</p>}
                 {this.getUpdateFormHTML()}
+                {this.getShareableUrlHTML()}
             </div>
         )
     }

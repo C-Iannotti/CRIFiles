@@ -130,14 +130,16 @@ export function getDisplayName(callback=(() => { return })) {
         })
 };
 
-export function getFileMetadata(fileId, callback=(() => { return })) {
+export function getFileMetadata(fileId, token=undefined, callback=(() => { return })) {
     axios({
-        method: "get",
-        url: SERVER_URL
-             + process.env.REACT_APP_RETRIEVE_METADATA_PATH
-             + "/"
-             + fileId,
-        withCredentials: true
+        method: "post",
+        url: SERVER_URL + process.env.REACT_APP_RETRIEVE_METADATA_PATH,
+        withCredentials: true,
+        data: {
+            fileId: fileId,
+            token: this.props.params && this.props.params.token,
+            why: this.props.params
+        }
         })
         .then(res => {
             res.data.trustedUsers = JSON.parse(res.data.trustedUsers)

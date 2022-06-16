@@ -70,8 +70,8 @@ function main(app, database) {
     //API path for retrieving a display name
     app.get(process.env.DISPLAYNAME_PATH,
         function(req, res) {
-            if (req.user !== null) res.json({ displayname: req.user.displayname })
-            else res.json({ displayname: null })
+            if (req.user === null) res.json({ displayname: null })
+            else res.json({ displayname: req.user.displayname })
         })
 
     //API for getting page of users with a given text in displayname or id
@@ -145,7 +145,8 @@ function main(app, database) {
                         trustedUsers: req.body.trustedUsers,
                         size: req.file.size,
                         mimetype: req.file.mimetype,
-                        comment: req.body.comment
+                        comment: req.body.comment,
+                        token: MongoDB.ObjectId()
                     },
                     function(err, doc) {
                         if (err) res.status(400);
@@ -196,19 +197,30 @@ function main(app, database) {
     );
 
     //API for retrieving a single file
-    app.get(process.env.RETRIEVE_FILE_PATH + "/:fileId",
+    app.post(process.env.RETRIEVE_FILE_PATH,
         ensureAuthenticated(),
         function(req, res) {
-            res.status(200);
-
-            const cursor = fileBucket.find({ _id: MongoDB.ObjectId(req.params.fileId) });
-            cursor.next((err, doc) => {
-                if (err || !doc) res.status(500).send();
-                else {
-                    fileBucket.openDownloadStream(MongoDB.ObjectId(req.params.fileId))
-                        .pipe(res);
+            fileCollection.findOne({
+                _id: MongoDB.ObjectId(req.body.fileId)
+            },
+            function(err, doc) {
+                if (err || doc === null) res.status(500).send();
+                else if (!(doc.privacy === "public" || (req.user._id.equals(doc.user))
+                || (doc.privacy === "private" && JSON.parse(doc.trustedUsers)[req.user._id.toString()] !== undefined)
+                || (doc.privacy === "shared" && req.body.token === doc.token.toString()))){
+                    res.status(500).send();
                 }
-            })
+                else {
+                    const cursor = fileBucket.find({ _id: MongoDB.ObjectId(req.body.fileId) });
+                    cursor.next((err, doc) => {
+                        if (err || !doc) res.status(500).send();
+                        else {
+                            fileBucket.openDownloadStream(MongoDB.ObjectId(req.body.fileId))
+                                .pipe(res);
+                        }
+                    })
+                }
+            });
         }
     );
 
@@ -233,11 +245,11 @@ function main(app, database) {
     );
 
     //API for getting a file's meta data
-    app.get(process.env.RETRIEVE_METADATA_PATH + "/:fileId",
+    app.post(process.env.RETRIEVE_METADATA_PATH,
         ensureAuthenticated(),
         function(req, res) {
             fileCollection.findOne({
-                    _id: MongoDB.ObjectId(req.params.fileId)
+                    _id: MongoDB.ObjectId(req.body.fileId)
                 },
                 function(err, doc) {
                     if (err || doc === null) res.status(500).send();
@@ -251,7 +263,12 @@ function main(app, database) {
                             size: doc.size,
                             mimetype: doc.mimetype,
                             isUsers: doc.user.toString() === req.user._id.toString(),
-                            comment: doc.comment
+                            comment: doc.comment,
+                            token: doc.token.toString(),
+                            isAccessible: (doc.privacy === "public"
+                                || (doc.privacy === "private" && JSON.parse(doc.trustedUsers)[req.user._id.toString()] !== undefined)
+                                || (doc.privacy === "shared" && req.body.token === doc.token.toString())
+                                || (req.user._id.equals(doc.user)))
                         });
                     }
                 }

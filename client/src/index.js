@@ -18,6 +18,7 @@ root.render(
             <Route path="/" element={<Home />} />
             <Route path="/user" element={<User />} />
             <Route path="/file/:fileId" element={<File />} />
+            <Route path="/file/:fileId/:token" element={<File />} />
             <Route 
                 path="*"
                 element={
