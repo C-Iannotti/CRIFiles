@@ -18,7 +18,6 @@ class File extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            metadata: null,
             searchedUsers: [],
             trustedUsers: {},
             searchedUsersPage: 1,
@@ -44,6 +43,7 @@ class File extends React.Component {
 
     checkFile() {
         this.getFileMetadata(this.props.params.fileId, res => {
+            this.getTrustedUsersPage(1)
             if (res.status === 500) {
                 this.props.useDatabase(db => {
                     let request = db.transaction([DB_STORE_NAME], "readwrite")
@@ -124,7 +124,7 @@ class File extends React.Component {
         let a = $("<a style='display: none;'/>");
         let url = window.URL.createObjectURL(blob);
         a.attr("href", url);
-        a.attr("download", this.state.metadata.filename);
+        a.attr("download", this.state.filename);
         $("body").append(a);
         a[0].click();
         window.URL.revokeObjectURL(url);
@@ -134,12 +134,12 @@ class File extends React.Component {
     displayFile(blob) {
         let url = window.URL.createObjectURL(blob);
         let supportedFiles = JSON.parse(process.env.REACT_APP_SUPPORTED_FILES); 
-        let fileSupport = supportedFiles[this.state.metadata.mimetype.split('/', 1)[0]];
+        let fileSupport = supportedFiles[this.state.mimetype.split('/', 1)[0]];
 
         if (fileSupport && (
                 !Array.isArray(fileSupport["types"]) ||
                 fileSupport["types"].length === 0 ||
-                fileSupport["types"].includes(this.state.metadata.mimetype.split('/', 2)[1])
+                fileSupport["types"].includes(this.state.mimetype.split('/', 2)[1])
                 )
             ) {
             if (fileSupport["tag"] === "iframe") {
@@ -152,13 +152,13 @@ class File extends React.Component {
                 );
             }
             else if (fileSupport["tag"] === "audio") {
-                this.setState({ tag: <audio id="file-display" className="audio-display" controls><source src={url} type={this.state.metadata.mimetype}></source></audio> });
+                this.setState({ tag: <audio id="file-display" className="audio-display" controls><source src={url} type={this.state.mimetype}></source></audio> });
             }
             else if (fileSupport["tag"] === "video") {
-                this.setState({ tag: <video id="file-display" className="video-display" controls><source src={url} type={this.state.metadata.mimetype}></source></video> });
+                this.setState({ tag: <video id="file-display" className="video-display" controls><source src={url} type={this.state.mimetype}></source></video> });
             }
             else if (fileSupport["tag"] === "img") {
-                this.setState({ tag: <img id="file-display" className="img-display" src={url} alt={this.state.metadata.filename + " display"} /> });
+                this.setState({ tag: <img id="file-display" className="img-display" src={url} alt={this.state.filename + " display"} /> });
             }
         }
     }
@@ -166,13 +166,12 @@ class File extends React.Component {
     updateFileMetadata() {
         let comment = document.getElementById("comment-input").value;
         let privacy = document.getElementById("privacy-input").value;
-
         axios({
             method: "put",
             url: SERVER_URL + process.env.REACT_APP_UPDATE_METADATA_PATH,
             data: {
                 fileId: this.props.params.fileId,
-                trustedUsers: JSON.stringify(this.state.metadata.trustedUsers),
+                trustedUsers: JSON.stringify(this.state.trustedUsers),
                 comment: comment,
                 privacy: privacy
             },
@@ -183,21 +182,21 @@ class File extends React.Component {
                     this.setState({ errorMessage: "Unable to update file's metadata" })
                 }
                 else {
-                    this.getFileMetadata();
+                    this.getFileMetadata(this.props.params.fileId);
                 }
             });
     }
 
     getUpdateFormHTML() {
         let userForm = "";
-        if (this.state.metadata && this.state.metadata.isUsers) {
+        if (this.state.isUsers) {
             userForm = 
             <form id="metadata-update-form" className="metadata-update-form">
                 <select id="privacy-input"
                         className="privacy-input"
                         name="privacy"
-                        defaultValue={this.state.metadata.privacy}
-                        key={this.state.metadata.privacy + "-update-form"}>
+                        defaultValue={this.state.privacy}
+                        key={this.state.privacy + "-update-form"}>
                     <option value="private">Private</option>
                     <option value="shared">Shared</option>
                     <option value="public">Public</option>
@@ -241,7 +240,7 @@ class File extends React.Component {
                         {this.state.searchedUsers.map(user => {
                             return (
                                 <div key={user._id + "_searched"} className="user-item-display" onClick={() => {
-                                    let trustedUsers = this.state.metadata.trustedUsers;
+                                    let trustedUsers = this.state.trustedUsers;
                                     trustedUsers[user._id] = user;
                                     this.setState({ trustedUsers: trustedUsers });
                                     this.getTrustedUsersPage(this.state.trustedUsersPage || 1);
@@ -281,7 +280,7 @@ class File extends React.Component {
                         {Object.values(this.state.trustedUsersView || {}).map(user => {
                             return (
                                 <div key={user._id + "_trusted"} className="user-item-display" onClick={() => {
-                                    let trustedUsers = this.state.metadata.trustedUsers;
+                                    let trustedUsers = this.state.trustedUsers;
                                     delete trustedUsers[user._id];
                                     this.setState({ trustedUsers: trustedUsers });
                                     this.getTrustedUsersPage(this.state.trustedUsersPage || 1);
@@ -292,7 +291,7 @@ class File extends React.Component {
                         })}
                     </div>
                 </div>
-                <input type="text" id="comment-input" className="comment-input" defaultValue={this.state.metadata.comment} maxLength="500" />
+                <input type="text" id="comment-input" className="comment-input" defaultValue={this.state.comment} maxLength="500" />
                 <input type="reset" id="metadata-reset-button" className="metadata-reset-button" value="Reset" />
                 <button type="button" id="metadata-update-button" className="metadata-update-button" onClick={this.updateFileMetadata}>Update</button>
             </form>;

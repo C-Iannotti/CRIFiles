@@ -265,7 +265,7 @@ function main(app, database) {
         function(req, res) {
             fileCollection.findOneAndUpdate({
                     _id: MongoDB.ObjectId(req.body.fileId),
-                    user: MongoDB.ObjectId(req.user._id)
+                    user: req.user._id
                 },
                 { "$set": {
                     comment: req.body.comment,

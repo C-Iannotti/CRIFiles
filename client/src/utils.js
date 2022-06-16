@@ -72,8 +72,6 @@ export function getSearchedUsersPage(userString, pageNumber, callback=(() => { r
 };
 
 export function getTrustedUsersPage(pageNumber, callback=(() => { return })) {
-     console.log(pageNumber)
-     console.log(this.state.trustedUsers)
     if (pageNumber >= 1 && 
         pageNumber <= Math.ceil(Object.keys(this.state.trustedUsers).length /
             Number(process.env.REACT_APP_PAGE_SIZE))) {
@@ -87,8 +85,6 @@ export function getTrustedUsersPage(pageNumber, callback=(() => { return })) {
         })
     }
     else if (Object.keys(this.state.trustedUsers).length <= (pageNumber - 1) * Number(process.env.REACT_APP_PAGE_SIZE)) {
-        console.log(Math.ceil(Object.keys(this.state.trustedUsers).length /
-        Number(process.env.REACT_APP_PAGE_SIZE)))
         pageNumber = Math.ceil(Object.keys(this.state.trustedUsers).length /
         Number(process.env.REACT_APP_PAGE_SIZE))
         this.setState({
@@ -132,7 +128,7 @@ export function getFileMetadata(fileId, callback=(() => { return })) {
         })
         .then(res => {
             res.data.trustedUsers = JSON.parse(res.data.trustedUsers)
-            this.setState(Object.assign({}, this.state, { metadata: res.data}, res.data), () => {
+            this.setState(res.data, () => {
                 callback(res);
             });
         });
