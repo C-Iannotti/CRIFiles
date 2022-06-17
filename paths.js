@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const MongoDB = require("mongodb");
 const fs = require("fs");
 const multer = require("multer");
+const crypto = require("crypto");
 
 const { ensureAuthenticated } = require("./auth.js");
 
@@ -146,7 +147,7 @@ function main(app, database) {
                         size: req.file.size,
                         mimetype: req.file.mimetype,
                         comment: req.body.comment,
-                        token: MongoDB.ObjectId()
+                        token: crypto.randomBytes(48).toString("base64url")
                     },
                     function(err, doc) {
                         if (err) res.status(400);
@@ -290,12 +291,31 @@ function main(app, database) {
                     privacy: req.body.privacy
                 }},
                 function(err, doc) {
-                    if (err || doc === null) res.status(500).send();
+                    if (err || doc.value === null) res.status(500).send();
                     else {
                         res.status(204).send();
                     };
                 }
             );
+        }
+    );
+
+    //API for updating a file's token
+    app.put(process.env.UPDATE_TOKEN_PATH,
+        ensureAuthenticated(),
+        function(req, res) {
+            fileCollection.findOneAndUpdate({
+                    _id: MongoDB.ObjectId(req.body.fileId),
+                    user: req.user._id
+                },
+                { "$set": { token: crypto.randomBytes(24).toString("base64url") }},
+                function(err, doc) {
+                    if (err || doc.value === null) res.status(500).send();
+                    else {
+                        res.status(204).send();
+                    } 
+                }
+            )
         }
     );
 }

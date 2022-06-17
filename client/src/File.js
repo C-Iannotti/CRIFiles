@@ -7,7 +7,8 @@ import {
     getSearchedUsersPage,
     getFileMetadata,
     deleteFile,
-    getTrustedUsersPage
+    getTrustedUsersPage,
+    createNewToken
 } from "./utils.js"
 
 const SERVER_URL = process.env.REACT_APP_PROTOCOL
@@ -27,6 +28,7 @@ class File extends React.Component {
         this.getSearchedUsersPage = getSearchedUsersPage.bind(this);
         this.getFileMetadata = getFileMetadata.bind(this);
         this.deleteFile = deleteFile.bind(this);
+        this.createNewToken = createNewToken.bind(this);
         this.getTrustedUsersPage = getTrustedUsersPage.bind(this);
         this.displayFile = this.displayFile.bind(this);
         this.downloadFile = this.downloadFile.bind(this);
@@ -42,7 +44,7 @@ class File extends React.Component {
     }
 
     checkFile() {
-        this.getFileMetadata(this.props.params.fileId, this.props.token, res => {
+        this.getFileMetadata(this.props.params.fileId, this.props.params.token, res => {
             this.getTrustedUsersPage(1);
             if (res.status === 500 || !res.data.isAccessible) {
                 this.props.useDatabase(db => {
@@ -183,7 +185,7 @@ class File extends React.Component {
                     this.setState({ errorMessage: "Unable to update file's metadata" })
                 }
                 else {
-                    this.getFileMetadata(this.props.params.fileId);
+                    this.getFileMetadata(this.props.params.fileId, this.props.params.token);
                 }
             });
     }
@@ -306,14 +308,16 @@ class File extends React.Component {
                 <input type="text"
                     id="shareable-url"
                     className="shareable-url"
-                    value={APP_URL + "/file" 
+                    defaultValue={APP_URL + "/file" 
                             + "/" + this.props.params.fileId
                             + "/" + this.state.token}
+                    key={this.state.token}
+                    readOnly
                 />
                 <button type="button"
                         id="token-update-button"
                         className="token-update-button"
-                        onClick={this.createNewToken}
+                        onClick={() => this.createNewToken(this.props.params.fileId, () => this.getFileMetadata(this.props.params.fileId, this.props.params.token))}
                         readOnly
                         >New Url</button>
             </div>
@@ -327,7 +331,7 @@ class File extends React.Component {
                 <p><strong>{this.props.params.fileId}</strong></p>
                 <div id="file-display-holder">{this.state.tag}</div>
                 <button type="button" id="download-button" className="download-button" onClick={() => this.retrieveFile(this.downloadFile)}>Download File</button>
-                <button type="button" id="delete-button" className="delete-button" onClick={this.deleteFile(this.props.params.fileId)}>Delete File</button>
+                <button type="button" id="delete-button" className="delete-button" onClick={() => this.deleteFile(this.props.params.fileId)}>Delete File</button>
                 <button type="button" id="display-button" className="display-button" onClick={() => this.retrieveFile(this.displayFile)}>Display File</button>
                 <br />
                 {this.state.errorMessage !== null && <p id="update-form-error" className="error-message">{this.state.errorMessage}</p>}

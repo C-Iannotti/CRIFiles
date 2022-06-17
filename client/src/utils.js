@@ -137,8 +137,7 @@ export function getFileMetadata(fileId, token=undefined, callback=(() => { retur
         withCredentials: true,
         data: {
             fileId: fileId,
-            token: this.props.params && this.props.params.token,
-            why: this.props.params
+            token: token
         }
         })
         .then(res => {
@@ -146,11 +145,14 @@ export function getFileMetadata(fileId, token=undefined, callback=(() => { retur
             this.setState(res.data, () => {
                 callback(res);
             });
+        })
+        .catch(err => {
+            console.error(err);
         });
 };
 
 export function deleteFile(fileId, callback=(() => { return })) {
-    return () => axios({
+    axios({
         method: "delete",
         url: SERVER_URL
              + process.env.REACT_APP_DELETE_FILE_PATH
@@ -159,10 +161,28 @@ export function deleteFile(fileId, callback=(() => { return })) {
         withCredentials: true
         })
         .then(res => {
-            if (res.status === 204) this.props.navigate(-1);
-            else {
-                console.log("Unable to delete file")
-                callback();
-            }
+            this.props.navigate(-1);
+            callback();
+        })
+        .catch(err => {
+            console.error(err);
         });
+};
+
+export function createNewToken(fileId, callback=(() => { return })) {
+    console.log("Should do something")
+    axios({
+        method: "put",
+        url: SERVER_URL + process.env.REACT_APP_UPDATE_TOKEN_PATH,
+        withCredentials: true,
+        data: {
+            fileId: fileId
+        }
+        })
+        .then(res => {
+            callback();
+        })
+        .catch(err => {
+            console.error(err);
+        })
 };
