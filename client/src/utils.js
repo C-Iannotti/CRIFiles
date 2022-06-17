@@ -161,7 +161,6 @@ export function deleteFile(fileId, callback=(() => { return })) {
         withCredentials: true
         })
         .then(res => {
-            this.props.navigate(-1);
             callback();
         })
         .catch(err => {

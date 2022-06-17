@@ -6,7 +6,8 @@ import $ from "jquery"
 import {
     getFilePage,
     getSearchedUsersPage,
-    getTrustedUsersPage
+    getTrustedUsersPage,
+    getDisplayName
 } from "./utils.js"
 
 const SERVER_URL = process.env.REACT_APP_PROTOCOL
@@ -20,10 +21,11 @@ class User extends React.Component {
             usersInput: ""
         };
 
-        this.handleUpload = this.handleUpload.bind(this);
         this.getFilePage = getFilePage.bind(this);
+        this.getDisplayName = getDisplayName.bind(this);
         this.getSearchedUsersPage = getSearchedUsersPage.bind(this);
         this.getTrustedUsersPage = getTrustedUsersPage.bind(this)
+        this.handleUpload = this.handleUpload.bind(this);
         this.filePageInputKeyDown = this.filePageInputKeyDown.bind(this);
         this.handlePageEnter = this.filePageInputKeyDown.bind(this);
         this.getFileDisplayHTML = this.getFileDisplayHTML.bind(this);
@@ -31,7 +33,14 @@ class User extends React.Component {
     }
 
     componentDidMount() {
-        this.getFilePage(1);
+        this.getDisplayName(() => {
+            if (this.state.displayname) {
+                this.getFilePage(1);
+            }
+            else {
+                this.props.navigate("/", { replace: true });
+            }
+        })
     }
 
     filePageInputKeyDown(e) {

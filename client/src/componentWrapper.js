@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation} from 'react-router-dom';
 import useDatabase from "./Database";
 
 
@@ -10,14 +10,13 @@ import useDatabase from "./Database";
  */
 export const withWrapper = (Component) => {
   const Wrapper = (props) => {
-    const navigate = useNavigate();
-    
     return (
       <Component
-        navigate={navigate}
+        navigate={useNavigate()}
         {...props}
         params={useParams()}
         useDatabase={useDatabase}
+        location={useLocation()}
         />
     );
   };

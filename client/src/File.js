@@ -331,7 +331,7 @@ class File extends React.Component {
                 <p><strong>{this.props.params.fileId}</strong></p>
                 <div id="file-display-holder">{this.state.tag}</div>
                 <button type="button" id="download-button" className="download-button" onClick={() => this.retrieveFile(this.downloadFile)}>Download File</button>
-                <button type="button" id="delete-button" className="delete-button" onClick={() => this.deleteFile(this.props.params.fileId)}>Delete File</button>
+                <button type="button" id="delete-button" className="delete-button" onClick={() => this.deleteFile(this.props.params.fileId, () => this.props.navigate(-1))}>Delete File</button>
                 <button type="button" id="display-button" className="display-button" onClick={() => this.retrieveFile(this.displayFile)}>Display File</button>
                 <br />
                 {this.state.errorMessage !== null && <p id="update-form-error" className="error-message">{this.state.errorMessage}</p>}

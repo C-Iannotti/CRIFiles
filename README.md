@@ -18,7 +18,6 @@ variables (each variable seen in the code). After running npm install in both pa
 use npm run build in client folder to create React app and node server.js in the same directory
 as the server.js file.
 ## Plan
-* Change login form to header accessible accross entire app
 * Change home page to include information about the application
 * Add file searching to home page for users to find others' files
 * Change back-end to support https requests
