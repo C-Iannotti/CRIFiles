@@ -8,6 +8,7 @@ const multer = require("multer");
 const crypto = require("crypto");
 
 const { ensureAuthenticated } = require("./auth.js");
+const { send } = require("process");
 
 const SALT_ROUNDS = Number(process.env.SALT_ROUNDS);
 
@@ -68,10 +69,20 @@ function main(app, database) {
         }
     );
 
+    //API path for logging out user
+    app.get(process.env.LOGOUT_PATH,
+        ensureAuthenticated(),
+        function(req, res) {
+            console.log("Here")
+            req.logout();
+            res.clearCookie("express.sid");
+            res.send("logged out");
+        })
+
     //API path for retrieving a display name
     app.get(process.env.DISPLAYNAME_PATH,
         function(req, res) {
-            if (req.user === null) res.json({ displayname: null })
+            if (!req.user) res.json({ displayname: null })
             else res.json({ displayname: req.user.displayname })
         })
 

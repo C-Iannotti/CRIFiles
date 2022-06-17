@@ -92,3 +92,11 @@
     flex-direction: row;
     cursor: pointer;
 }
+
+.header {
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+}

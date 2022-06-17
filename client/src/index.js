@@ -7,6 +7,7 @@ import {
 import Home from "./Home.js";
 import User from "./User.js";
 import File from "./File.js";
+import Header from "./Header.js"
 
 const root = ReactDOM.createRoot(
     document.getElementById("root")
@@ -14,6 +15,7 @@ const root = ReactDOM.createRoot(
 
 root.render(
     <BrowserRouter>
+        <Header />
         <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/user" element={<User />} />

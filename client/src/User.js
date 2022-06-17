@@ -6,7 +6,6 @@ import $ from "jquery"
 import {
     getFilePage,
     getSearchedUsersPage,
-    getDisplayName,
     getTrustedUsersPage
 } from "./utils.js"
 
@@ -29,11 +28,9 @@ class User extends React.Component {
         this.handlePageEnter = this.filePageInputKeyDown.bind(this);
         this.getFileDisplayHTML = this.getFileDisplayHTML.bind(this);
         this.getFileUploadFormHTML = this.getFileUploadFormHTML.bind(this);
-        this.getDisplayName = getDisplayName.bind(this);
     }
 
     componentDidMount() {
-        this.getDisplayName();
         this.getFilePage(1);
     }
 
@@ -225,7 +222,6 @@ class User extends React.Component {
     render() {
         return (
             <div className="user-page">
-                { this.state.displayname && <p>Hello user {this.state.displayname}</p> }
                 {this.getFileUploadFormHTML()}
                 {this.getFileDisplayHTML()}
             </div>

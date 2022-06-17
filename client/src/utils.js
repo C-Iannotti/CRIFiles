@@ -184,5 +184,19 @@ export function createNewToken(fileId, callback=(() => { return })) {
         })
         .catch(err => {
             console.error(err);
-        })
+        });
 };
+
+export function logout(callback=(() => { return })) {
+    axios({
+        method: "get",
+        url: SERVER_URL + process.env.REACT_APP_LOGOUT_PATH,
+        withCredentials: true
+        })
+        .then(res => {
+            callback();
+        })
+        .catch(err => {
+            console.error(err)
+        });
+}
