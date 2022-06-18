@@ -18,7 +18,10 @@ export function getFilePage(page, callback=(() => { return })) {
                     method: "post",
                     url: SERVER_URL + process.env.REACT_APP_USER_FILES_PATH + "/" + (page - 1),
                     withCredentials: true,
-                    signal: this.state.filesController.signal
+                    signal: this.state.filesController.signal,
+                    data: {
+                        getUserFiles: true
+                    }
                     })
                     .then(res => {
                         this.setState({
@@ -141,7 +144,6 @@ export function getFileMetadata(fileId, token=undefined, callback=(() => { retur
         }
         })
         .then(res => {
-            res.data.trustedUsers = res.data.trustedUsers
             this.setState(res.data, () => {
                 callback(res);
             });
@@ -169,7 +171,6 @@ export function deleteFile(fileId, callback=(() => { return })) {
 };
 
 export function createNewToken(fileId, callback=(() => { return })) {
-    console.log("Should do something")
     axios({
         method: "put",
         url: SERVER_URL + process.env.REACT_APP_UPDATE_TOKEN_PATH,

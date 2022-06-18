@@ -222,7 +222,7 @@ class User extends React.Component {
                     </div>
                 </div>
                 <input type="text" id="comment-input" className="comment-input" name="comment" defaultValue="" maxLength="500" />
-                <input type="reset" id="file-reset-button" className="file-reset-button" value="Reset" />
+                <input type="reset" id="file-reset-button" className="file-reset-button" value="Reset" onClick={() => this.setState({trustedUsers: {}, trustedUsersView: []})}/>
                 <button type="button" id="file-upload-button" className="file-upload-button" onClick={this.handleUpload}>Submit</button>
             </form>
         );

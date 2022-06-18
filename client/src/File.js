@@ -191,9 +191,7 @@ class File extends React.Component {
     }
 
     getUpdateFormHTML() {
-        let userForm = "";
-        if (this.state.isUsers) {
-            userForm = 
+        return(
             <form id="metadata-update-form" className="metadata-update-form">
                 <select id="privacy-input"
                         className="privacy-input"
@@ -244,8 +242,6 @@ class File extends React.Component {
                             return (
                                 <div key={user._id + "_searched"} className="user-item-display" onClick={() => {
                                     let trustedUsers = this.state.trustedUsers;
-                                    console.log(user._id)
-                                    console.log(user)
                                     trustedUsers[user._id] = user;
                                     this.setState({ trustedUsers: trustedUsers });
                                     this.getTrustedUsersPage(this.state.trustedUsersPage || 1);
@@ -297,11 +293,10 @@ class File extends React.Component {
                     </div>
                 </div>
                 <input type="text" id="comment-input" className="comment-input" defaultValue={this.state.comment} maxLength="500" />
-                <input type="reset" id="metadata-reset-button" className="metadata-reset-button" value="Reset" />
+                <input type="reset" id="metadata-reset-button" className="metadata-reset-button" value="Reset" onClick={() => this.getFileMetadata(this.props.params.fileId, undefined, () => this.getTrustedUsersPage(this.state.trustedUsersPage))}/>
                 <button type="button" id="metadata-update-button" className="metadata-update-button" onClick={this.updateFileMetadata}>Update</button>
-            </form>;
-        }
-        return userForm
+            </form>
+        )
     }
 
     getShareableUrlHTML() {
@@ -334,11 +329,10 @@ class File extends React.Component {
                 <div id="file-display-holder">{this.state.tag}</div>
                 <button type="button" id="download-button" className="download-button" onClick={() => this.retrieveFile(this.downloadFile)}>Download File</button>
                 <button type="button" id="delete-button" className="delete-button" onClick={() => this.deleteFile(this.props.params.fileId, () => this.props.navigate(-1))}>Delete File</button>
-                <button type="button" id="display-button" className="display-button" onClick={() => this.retrieveFile(this.displayFile)}>Display File</button>
                 <br />
                 {this.state.errorMessage !== null && <p id="update-form-error" className="error-message">{this.state.errorMessage}</p>}
-                {this.getUpdateFormHTML()}
-                {this.getShareableUrlHTML()}
+                {this.state.isUsers && this.getUpdateFormHTML()}
+                {this.state.isUsers && this.getShareableUrlHTML()}
             </div>
         )
     }
