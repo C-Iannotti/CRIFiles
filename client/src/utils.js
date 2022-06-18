@@ -5,7 +5,7 @@ const SERVER_URL = process.env.REACT_APP_PROTOCOL
 
 export function getFilePage(page, callback=(() => { return })) {
     if ((page === 1) || (page > 1 && page <= Math.ceil(this.state.totalFiles / process.env.REACT_APP_PAGE_SIZE))) {
-        if (this.state.filesController !== undefined) this.state.filesController.abort();
+        if (this.state.filesController) this.state.filesController.abort();
         this.setState(({
             searchedFiles: [],
             filesPage: page,
@@ -15,7 +15,7 @@ export function getFilePage(page, callback=(() => { return })) {
             if (err) console.error(err)
             else {
                 axios({
-                    method: "get",
+                    method: "post",
                     url: SERVER_URL + process.env.REACT_APP_USER_FILES_PATH + "/" + (page - 1),
                     withCredentials: true,
                     signal: this.state.filesController.signal
@@ -141,7 +141,7 @@ export function getFileMetadata(fileId, token=undefined, callback=(() => { retur
         }
         })
         .then(res => {
-            res.data.trustedUsers = JSON.parse(res.data.trustedUsers)
+            res.data.trustedUsers = res.data.trustedUsers
             this.setState(res.data, () => {
                 callback(res);
             });

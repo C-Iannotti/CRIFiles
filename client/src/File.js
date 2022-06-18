@@ -174,7 +174,7 @@ class File extends React.Component {
             url: SERVER_URL + process.env.REACT_APP_UPDATE_METADATA_PATH,
             data: {
                 fileId: this.props.params.fileId,
-                trustedUsers: JSON.stringify(this.state.trustedUsers),
+                trustedUsers: this.state.trustedUsers,
                 comment: comment,
                 privacy: privacy
             },
@@ -244,6 +244,8 @@ class File extends React.Component {
                             return (
                                 <div key={user._id + "_searched"} className="user-item-display" onClick={() => {
                                     let trustedUsers = this.state.trustedUsers;
+                                    console.log(user._id)
+                                    console.log(user)
                                     trustedUsers[user._id] = user;
                                     this.setState({ trustedUsers: trustedUsers });
                                     this.getTrustedUsersPage(this.state.trustedUsersPage || 1);

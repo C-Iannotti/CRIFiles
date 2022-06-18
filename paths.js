@@ -73,7 +73,6 @@ function main(app, database) {
     app.get(process.env.LOGOUT_PATH,
         ensureAuthenticated(),
         function(req, res) {
-            console.log("Here")
             req.logout();
             res.clearCookie("express.sid");
             res.send("logged out");
@@ -98,7 +97,7 @@ function main(app, database) {
                 objectId = null
             }
 
-            if (objectId !== null) {
+            if (objectId) {
                 userCollection.findOne({ _id: objectId },
                 (err, doc) => {
                     if (err || doc === null) res.status(500).send();
@@ -142,6 +141,7 @@ function main(app, database) {
         multer( { dest: process.env.DATA_PATH}).single("userFile"),
         function(req, res) {
             res.status(204);
+            
             try {
                 const stream = fileBucket.openUploadStream(req.file.filename, {
                     chunkSizeBytes: 1048576,
@@ -154,7 +154,7 @@ function main(app, database) {
                         _id: stream.id,
                         fileName: req.file.originalname,
                         privacy: req.body.privacy,
-                        trustedUsers: req.body.trustedUsers,
+                        trustedUsers: JSON.parse(req.body.trustedUsers),
                         size: req.file.size,
                         mimetype: req.file.mimetype,
                         comment: req.body.comment,
@@ -178,33 +178,129 @@ function main(app, database) {
     );
 
     //API for retrieving page of user's files' metadata
-    app.get(process.env.USER_FILES_PATH + "/:pageNum",
-        ensureAuthenticated(),
+    app.post(process.env.USER_FILES_PATH + "/:pageNum",
         (req, res) => {
-            fileCollection.count({
+            if (req.body._id) {
+                try {
+                    req.body._id = MongoDB.ObjectId(req.body._id)
+                }
+                catch {
+                    delete req.body._id
+                }
+            }
+            else if (req.body._id === "" || req.body.user === null) delete req.body._id
+
+            if (req.body.user) {
+                try {
+                    req.body.user = MongoDB.ObjectId(req.body.user)
+                }
+                catch {
+                    delete req.body.user
+                }
+            }
+            else if (req.body.user === "" || req.body.user === null) delete req.body.user
+            
+            if (req.body.getUserFiles) {
+                delete req.body.getUserFiles;
+                fileCollection.count(Object.assign({}, {
                     user: req.user._id
-                },
+                }, req.body),
                 (err, count) => {
                     if (err) res.status(500).send();
                     else {
-                        fileCollection.find({
-                                user: req.user._id
-                            },
-                            {
-                                limit: Number(process.env.PAGE_SIZE),
-                                sort: { _id: 1},
-                                skip: Number(process.env.PAGE_SIZE) * Number(req.params.pageNum)
-                            }).toArray((err, docs) => {
-                                    if (err || docs === null) res.status(500).send()
-                                    else {
-                                        res.json({
-                                            files: docs,
-                                            totalFiles: count
-                                        })
-                                    }
-                            });
+                        fileCollection.find(Object.assign({}, {
+                            user: req.user._id
+                        }, req.body),
+                        {
+                            limit: Number(process.env.PAGE_SIZE),
+                            sort: { _id: 1},
+                            skip: Number(process.env.PAGE_SIZE) * Number(req.params.pageNum)
+                        }).toArray((err, docs) => {
+                                if (err || docs === null) res.status(500).send()
+                                else {
+                                    res.json({
+                                        files: docs,
+                                        totalFiles: count
+                                    })
+                                }
+                        });
                     }
                 })
+            }
+            else if (req.user) {
+                fileCollection.count(Object.assign({}, {
+                    "$or": [
+                        {
+                            user: req.user._id
+                        },
+                        {
+                            privacy: "private",
+                            trustedUsers: { "$exists": [req.user._id] }
+                        },
+                        {
+                            privacy: "public"
+                        }
+                    ]
+                }, req.body),
+                (err, count) => {
+                    if (err) res.status(500).send();
+                    else {
+                        fileCollection.find(Object.assign({}, {
+                            "$or": [
+                                {
+                                    user: req.user._id
+                                },
+                                {
+                                    privacy: "private",
+                                    trustedUsers: { "$exists": [req.user._id] }
+                                },
+                                {
+                                    privacy: "public"
+                                }
+                            ]
+                        }, req.body),
+                        {
+                            limit: Number(process.env.PAGE_SIZE),
+                            sort: { _id: 1},
+                            skip: Number(process.env.PAGE_SIZE) * Number(req.params.pageNum)
+                        }).toArray((err, docs) => {
+                                if (err || docs === null) res.status(500).send()
+                                else {
+                                    res.json({
+                                        files: docs,
+                                        totalFiles: count
+                                    })
+                                }
+                        });
+                    }
+                })
+            }
+            else {
+                fileCollection.count(Object.assign({}, {
+                    privacy: "public"
+                }, req.body),
+                (err, count) => {
+                    if (err) res.status(500).send();
+                    else {
+                        fileCollection.find(Object.assign({}, {
+                                privacy: "public"
+                            }, req.body),
+                        {
+                            limit: Number(process.env.PAGE_SIZE),
+                            sort: { _id: 1},
+                            skip: Number(process.env.PAGE_SIZE) * Number(req.params.pageNum)
+                        }).toArray((err, docs) => {
+                                if (err || docs === null) res.status(500).send()
+                                else {
+                                    res.json({
+                                        files: docs,
+                                        totalFiles: count
+                                    })
+                                }
+                        });
+                    }
+                })
+            }
         }
     );
 
@@ -218,7 +314,7 @@ function main(app, database) {
             function(err, doc) {
                 if (err || doc === null) res.status(500).send();
                 else if (!(doc.privacy === "public" || (req.user._id.equals(doc.user))
-                || (doc.privacy === "private" && JSON.parse(doc.trustedUsers)[req.user._id.toString()] !== undefined)
+                || (doc.privacy === "private" && doc.trustedUsers[req.user._id.toString()] !== undefined)
                 || (doc.privacy === "shared" && req.body.token === doc.token.toString()))){
                     res.status(500).send();
                 }
@@ -278,7 +374,7 @@ function main(app, database) {
                             comment: doc.comment,
                             token: doc.token.toString(),
                             isAccessible: (doc.privacy === "public"
-                                || (doc.privacy === "private" && JSON.parse(doc.trustedUsers)[req.user._id.toString()] !== undefined)
+                                || (doc.privacy === "private" && doc.trustedUsers[req.user._id.toString()] !== undefined)
                                 || (doc.privacy === "shared" && req.body.token === doc.token.toString())
                                 || (req.user._id.equals(doc.user)))
                         });
