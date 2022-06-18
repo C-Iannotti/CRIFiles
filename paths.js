@@ -24,7 +24,7 @@ function main(app, database) {
     const fileBucket = new MongoDB.GridFSBucket(database, { bucketName: "file-bucket"});
 
     userCollection.createIndex( { displayname: "text" })
-    fileCollection.createIndex( { fileName: "text" })
+    fileCollection.createIndex( { filename: "text" })
 
     //API path for registering a user
     app.post(process.env.REGISTER_PATH,
@@ -152,7 +152,7 @@ function main(app, database) {
                 fileCollection.insertOne({
                         user: req.user._id,
                         _id: stream.id,
-                        fileName: req.file.originalname,
+                        filename: req.file.originalname,
                         privacy: req.body.privacy,
                         trustedUsers: JSON.parse(req.body.trustedUsers),
                         size: req.file.size,
@@ -199,7 +199,11 @@ function main(app, database) {
                 }
             }
             else if (req.body.user === "" || req.body.user === null) delete req.body.user
-            
+
+            if (req.body.filename) {
+
+            }
+
             if (req.body.getUserFiles) {
                 delete req.body.getUserFiles;
                 fileCollection.count(Object.assign({}, {
@@ -365,7 +369,7 @@ function main(app, database) {
                         res.json({
                             userId: doc.user,
                             fileId: doc._id,
-                            filename: doc.fileName,
+                            filename: doc.filename,
                             privacy: doc.privacy,
                             trustedUsers: doc.trustedUsers,
                             size: doc.size,

@@ -2,8 +2,9 @@ import axios from "axios";
 
 const SERVER_URL = process.env.REACT_APP_PROTOCOL
     + process.env.REACT_APP_DOMAIN;
+const DB_STORE_NAME = process.env.REACT_APP_IDB_STORE_NAME;
 
-export function getFilePage(page, callback=(() => { return })) {
+export function getFilePage(page, data, callback=(() => { return })) {
     if ((page === 1) || (page > 1 && page <= Math.ceil(this.state.totalFiles / process.env.REACT_APP_PAGE_SIZE))) {
         if (this.state.filesController) this.state.filesController.abort();
         this.setState(({
@@ -19,9 +20,7 @@ export function getFilePage(page, callback=(() => { return })) {
                     url: SERVER_URL + process.env.REACT_APP_USER_FILES_PATH + "/" + (page - 1),
                     withCredentials: true,
                     signal: this.state.filesController.signal,
-                    data: {
-                        getUserFiles: true
-                    }
+                    data: data
                     })
                     .then(res => {
                         this.setState({
@@ -199,4 +198,149 @@ export function logout(callback=(() => { return })) {
         .catch(err => {
             console.error(err)
         });
+};
+
+export function uploadFile(file, privacy, trustedUsers, comment, callback=() => { return }) {
+    axios({
+        method: "post",
+        url: SERVER_URL + process.env.REACT_APP_UPLOAD_PATH,
+        data: {
+            userFile: file,
+            trustedUsers: JSON.stringify(trustedUsers),
+            comment: comment,
+            privacy: privacy
+        },
+        headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true
+        })
+        .then(res => {
+            this.setState({
+                trustedUsers: {}
+            }, () => callback());
+        })
+        .catch(err => {
+            console.error(err);
+        })
+};
+
+export function retrieveFile(database, callback=(() => { return })) {
+    database(db => {
+        let objectStore = db.transaction(DB_STORE_NAME).objectStore(DB_STORE_NAME);
+
+        let req1 = objectStore.openCursor(this.props.params.fileId);
+        req1.onerror = event => {
+            console.error("Unable to check database for file: " + event.target.errorcode);
+        }
+        req1.onsuccess = event => {
+            let cursor = event.target.result;
+            if (!cursor) {
+                axios({
+                    method: "post",
+                    url: SERVER_URL + process.env.REACT_APP_RETRIEVE_FILE_PATH,
+                    withCredentials: true,
+                    responseType: "blob",
+                    data: {
+                        fileId: this.props.params.fileId,
+                        token: this.props.params.token
+                    }
+                    })
+                    .then(res => {
+                        let transaction = db.transaction([DB_STORE_NAME], "readwrite");
+                        transaction.oncomplete = event => {
+                            console.log("Completed adding to database: " + event.target.result);
+                            db.close();
+                        }
+                        transaction.onerror = event => {
+                            console.error("Unable to locally store file: " + event.target.errorCode);
+                            db.close();
+                        };
+
+                        let req2 = transaction.objectStore(DB_STORE_NAME).add({
+                            fileId: this.props.params.fileId,
+                            blob: res.data
+                        });
+                        req2.onsuccess = event => {
+                            console.log("Added item: " + event.target.result);
+                        };
+                        req2.onerror = event => {
+                            console.error("Unable to locally store file: " + event.target.errorCode);
+                        };
+
+                        callback(res.data);
+                    })
+                    .catch(err => {
+                        console.error(err);
+                    });
+            }
+            else {
+                console.log("Found local file");
+                callback(cursor.value.blob);
+            }
+        }
+    });
+};
+
+export function updateFile(fileId, trustedUsers, comment, privacy, callback=(() => { return })) {
+    axios({
+        method: "put",
+        url: SERVER_URL + process.env.REACT_APP_UPDATE_METADATA_PATH,
+        data: {
+            fileId: fileId,
+            trustedUsers: trustedUsers,
+            comment: comment,
+            privacy: privacy
+        },
+        withCredentials: true
+        })
+        .then(res => {
+            callback(res)
+        })
+        .catch(err => {
+            this.setState({ errorMessage: "Unable to update file's metadata" })
+        })
+};
+
+export function registerUser(username, password, displayname, callback=(() => { return })) {
+    if (!username.match(new RegExp(process.env.REACT_APP_USERNAME_VERIFICATION))) {
+        this.setState({
+            errorMessage: "Unable to register username"
+        });
+    }
+    else if (!password.match(new RegExp(process.env.REACT_APP_PASSWORD_VERIFICATION))) {
+        this.setState({
+            errorMessage: "Unable to register password"
+        });
+    }
+    else {         
+        axios.post(SERVER_URL + process.env.REACT_APP_REGISTER_PATH, {
+                username: username,
+                password: password,
+                displayname: displayname
+            },
+            {
+                withCredentials: true
+            })
+            .then(res => {
+                this.setState({ dropdownState: "logged-in" }, () => callback());
+            })
+            .catch(err => {
+                console.error(err);
+            });
+    }
 }
+
+export function loginUser(username, password, callback=(() => { return })) {
+    axios.post(SERVER_URL + process.env.REACT_APP_LOGIN_PATH, {
+        username: username,
+        password: password
+        },
+        {
+            withCredentials: true
+        })
+        .then(res => {
+            this.setState({ dropdownState: "logged-in" }, () => callback());
+        })
+        .catch(err => {
+            console.error(err);
+        });
+} 

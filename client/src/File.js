@@ -1,5 +1,4 @@
 import React from "react";
-import axios from "axios";
 import "./style.css";
 import { withWrapper } from "./componentWrapper";
 import $ from "jquery";
@@ -8,7 +7,9 @@ import {
     getFileMetadata,
     deleteFile,
     getTrustedUsersPage,
-    createNewToken
+    createNewToken,
+    retrieveFile,
+    updateFile
 } from "./utils.js"
 
 const SERVER_URL = process.env.REACT_APP_PROTOCOL
@@ -30,6 +31,8 @@ class File extends React.Component {
         this.deleteFile = deleteFile.bind(this);
         this.createNewToken = createNewToken.bind(this);
         this.getTrustedUsersPage = getTrustedUsersPage.bind(this);
+        this.retrieveFile = retrieveFile.bind(this);
+        this.updateFile = updateFile.bind(this);
         this.displayFile = this.displayFile.bind(this);
         this.downloadFile = this.downloadFile.bind(this);
         this.retrieveFile = this.retrieveFile.bind(this);
@@ -61,65 +64,17 @@ class File extends React.Component {
                 this.props.navigate(-1);
             }
             else if (res.data.size <= process.env.REACT_APP_MAX_FILE_SIZE) {
-                this.retrieveFile(this.displayFile);
+                this.retrieveFile(this.props.useDatabase, this.displayFile);
             }
         })
     }
 
-    retrieveFile(userFunction) {
-        this.props.useDatabase(db => {
-            let objectStore = db.transaction(DB_STORE_NAME).objectStore(DB_STORE_NAME);
-
-            let req1 = objectStore.openCursor(this.props.params.fileId);
-            req1.onerror = event => {
-                console.error("Unable to check database for file: " + event.target.errorcode);
-            }
-            req1.onsuccess = event => {
-                let cursor = event.target.result;
-                if (!cursor) {
-                    axios({
-                        method: "post",
-                        url: SERVER_URL + process.env.REACT_APP_RETRIEVE_FILE_PATH,
-                        withCredentials: true,
-                        responseType: "blob",
-                        data: {
-                            fileId: this.props.params.fileId,
-                            token: this.props.params.token
-                        }
-                        })
-                        .then(res => {
-                            let transaction = db.transaction([DB_STORE_NAME], "readwrite");
-                            transaction.oncomplete = event => {
-                                console.log("Completed adding to database: " + event.target.result);
-                                db.close();
-                            }
-                            transaction.onerror = event => {
-                                console.error("Unable to locally store file: " + event.target.errorCode);
-                                db.close();
-                            };
-
-                            let req2 = transaction.objectStore(DB_STORE_NAME).add({
-                                fileId: this.props.params.fileId,
-                                blob: res.data
-                            });
-                            req2.onsuccess = event => {
-                                console.log("Added item: " + event.target.result);
-                            };
-                            req2.onerror = event => {
-                                console.error("Unable to locally store file: " + event.target.errorCode);
-                            };
-
-                            userFunction(res.data);
-                        })
-                        .catch(err => {
-                            console.error(err);
-                        });
-                }
-                else {
-                    console.log("Found local file");
-                    userFunction(cursor.value.blob);
-                }
-            }
+    updateFileMetadata() {
+        let comment = document.getElementById("comment-input").value;
+        let privacy = document.getElementById("privacy-input").value;
+        
+        this.updateFile(this.props.params.fileId, this.state.trustedUsers || {}, comment, privacy, () => {
+            this.getFileMetadata(this.props.params.fileId, this.props.params.token)
         });
     }
 
@@ -164,30 +119,6 @@ class File extends React.Component {
                 this.setState({ tag: <img id="file-display" className="img-display" src={url} alt={this.state.filename + " display"} /> });
             }
         }
-    }
-
-    updateFileMetadata() {
-        let comment = document.getElementById("comment-input").value;
-        let privacy = document.getElementById("privacy-input").value;
-        axios({
-            method: "put",
-            url: SERVER_URL + process.env.REACT_APP_UPDATE_METADATA_PATH,
-            data: {
-                fileId: this.props.params.fileId,
-                trustedUsers: this.state.trustedUsers,
-                comment: comment,
-                privacy: privacy
-            },
-            withCredentials: true
-            })
-            .then(res => {
-                if (res.status >= 400) {
-                    this.setState({ errorMessage: "Unable to update file's metadata" })
-                }
-                else {
-                    this.getFileMetadata(this.props.params.fileId, this.props.params.token);
-                }
-            });
     }
 
     getUpdateFormHTML() {
@@ -327,7 +258,7 @@ class File extends React.Component {
                 <p>File Page</p>
                 <p><strong>{this.props.params.fileId}</strong></p>
                 <div id="file-display-holder">{this.state.tag}</div>
-                <button type="button" id="download-button" className="download-button" onClick={() => this.retrieveFile(this.downloadFile)}>Download File</button>
+                <button type="button" id="download-button" className="download-button" onClick={() => this.retrieveFile(this.props.useDatabase, this.downloadFile)}>Download File</button>
                 <button type="button" id="delete-button" className="delete-button" onClick={() => this.deleteFile(this.props.params.fileId, () => this.props.navigate(-1))}>Delete File</button>
                 <br />
                 {this.state.errorMessage !== null && <p id="update-form-error" className="error-message">{this.state.errorMessage}</p>}

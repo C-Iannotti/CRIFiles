@@ -1,14 +1,12 @@
 import React from "react"
 import {
     getDisplayName,
-    logout
+    logout,
+    registerUser,
+    loginUser
 } from "./utils.js"
 import { withWrapper } from "./componentWrapper";
-import axios from "axios";
 import $ from "jquery"
-
-const SERVER_URL = process.env.REACT_APP_PROTOCOL
-    + process.env.REACT_APP_DOMAIN;
 
 class Header extends React.Component {
     constructor(props) {
@@ -19,6 +17,8 @@ class Header extends React.Component {
 
         this.getDisplayName = getDisplayName.bind(this);
         this.logout = logout.bind(this);
+        this.registerUser = registerUser.bind(this);
+        this.loginUser = loginUser.bind(this);
         this.handleClick = this.handleClick.bind(this);
         this.getCurrentDropdownHTML = this.getCurrentDropdownHTML.bind(this);
         this.handleRegister = this.handleRegister.bind(this);
@@ -50,61 +50,26 @@ class Header extends React.Component {
         let password = document.getElementById("password").value;
         let displayname = document.getElementById("displayname").value;
 
-        if (!username.match(new RegExp(process.env.REACT_APP_USERNAME_VERIFICATION))) {
-            this.setState({
-                errorMessage: "Unable to register username"
-            });
-        }
-        else if (!password.match(new RegExp(process.env.REACT_APP_PASSWORD_VERIFICATION))) {
-            this.setState({
-                errorMessage: "Unable to register password"
-            });
-        }
-        else {         
-            axios.post(SERVER_URL + process.env.REACT_APP_REGISTER_PATH, {
-                    username: username,
-                    password: password,
-                    displayname: displayname
-                },
-                {
-                    withCredentials: true
-                })
-                .then(res => {
-                    this.props.navigate(process.env.REACT_APP_USER_PAGE);
-                    if (!$("#login-dropdown").hasClass("login-dropdown-display")) {
-                        $("#login-dropdown").toggleClass('login-dropdown-display');
-                    }
-                    this.getDisplayName();
-                    this.setState({ dropdownState: "logged-in" });
-                })
-                .catch(err => {
-                    console.error(err);
-                });
-        }
+        this.registerUser(username, password, displayname, () => {
+            this.props.navigate(process.env.REACT_APP_USER_PAGE);
+            if (!$("#login-dropdown").hasClass("login-dropdown-display")) {
+                $("#login-dropdown").toggleClass('login-dropdown-display');
+            }
+            this.getDisplayName();
+        });
     }
 
     handleLogin() {
         let username = document.getElementById("username").value;
         let password = document.getElementById("password").value;
 
-        axios.post(SERVER_URL + process.env.REACT_APP_LOGIN_PATH, {
-                username: username,
-                password: password
-            },
-            {
-                withCredentials: true
-            })
-            .then(res => {
-                this.props.navigate(process.env.REACT_APP_USER_PAGE);
-                if (!$("#login-dropdown").hasClass("login-dropdown-display")) {
-                    $("#login-dropdown").toggleClass('login-dropdown-display');
-                }
-                this.getDisplayName();
-                this.setState({ dropdownState: "logged-in" });
-            })
-            .catch(err => {
-                console.error(err);
-            });
+        this.loginUser(username, password, () => {
+            this.props.navigate(process.env.REACT_APP_USER_PAGE);
+            if (!$("#login-dropdown").hasClass("login-dropdown-display")) {
+                $("#login-dropdown").toggleClass('login-dropdown-display');
+            }
+            this.getDisplayName();
+        })
     }
 
     getCurrentDropdownHTML() {

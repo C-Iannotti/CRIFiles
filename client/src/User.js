@@ -1,5 +1,4 @@
 import React from "react";
-import axios from "axios";
 import "./style.css";
 import { withWrapper } from "./componentWrapper";
 import $ from "jquery"
@@ -7,11 +6,9 @@ import {
     getFilePage,
     getSearchedUsersPage,
     getTrustedUsersPage,
-    getDisplayName
+    getDisplayName,
+    uploadFile
 } from "./utils.js"
-
-const SERVER_URL = process.env.REACT_APP_PROTOCOL
-    + process.env.REACT_APP_DOMAIN;
 
 class User extends React.Component {
     constructor(props) {
@@ -25,6 +22,7 @@ class User extends React.Component {
         this.getDisplayName = getDisplayName.bind(this);
         this.getSearchedUsersPage = getSearchedUsersPage.bind(this);
         this.getTrustedUsersPage = getTrustedUsersPage.bind(this)
+        this.uploadFile = uploadFile.bind(this);
         this.handleUpload = this.handleUpload.bind(this);
         this.filePageInputKeyDown = this.filePageInputKeyDown.bind(this);
         this.handlePageEnter = this.filePageInputKeyDown.bind(this);
@@ -35,7 +33,7 @@ class User extends React.Component {
     componentDidMount() {
         this.getDisplayName(() => {
             if (this.state.displayname) {
-                this.getFilePage(1);
+                this.getFilePage(1, { getUserFiles: true });
             }
             else {
                 this.props.navigate("/", { replace: true });
@@ -45,7 +43,7 @@ class User extends React.Component {
 
     filePageInputKeyDown(e) {
         if (e.key === "Enter") {
-            this.getFilePage(Number($("#page-number-input").val()))
+            this.getFilePage(Number($("#page-number-input").val()), { getUserFiles: true })
         }
     }
 
@@ -54,39 +52,20 @@ class User extends React.Component {
         let comment = document.getElementById("comment-input").value;
         let privacy = document.getElementById("privacy-input").value;
 
-        axios({
-            method: "post",
-            url: SERVER_URL + process.env.REACT_APP_UPLOAD_PATH,
-            data: { 
-                userFile: file,
-                trustedUsers: JSON.stringify(this.state.trustedUsers || {}),
-                comment: comment,
-                privacy: privacy
-            },
-            headers: { "Content-Type": "multipart/form-data" },
-            withCredentials: true,
-            })
-            .then(res => {
-                this.setState({
-                    trustedUsers: {}
-                });
-                this.getFilePage(this.state.filesPage);
-            })
-            .catch(err => {
-                console.error(err);
-            });
-        this.forceUpdate()
+        this.uploadFile(file, privacy, this.state.trustedUsers || {}, comment, () => {
+            this.getFilePage(this.state.filesPage, { getUserFiles: true });
+        });
     }
 
     getFileDisplayHTML() {
         return (
-            <div>
+            <div className="file-search">
                 {this.state.totalFiles !== null && <p>{this.state.totalFiles}</p>}
                 <div id="page-navigator" className="page-navigator">
                     <button type="button"
                             id="previous-page-button"
                             className="page-button"
-                            onClick={() => { this.getFilePage(this.state.filesPage-1) }}
+                            onClick={() => this.getFilePage(this.state.filesPage-1, { getUserFiles: true })}
                             >Previous</button>
                     <input  type="text"
                             id="page-number-input"
@@ -98,14 +77,14 @@ class User extends React.Component {
                     <button type="button"
                             id="next-page-button"
                             className="page-button"
-                            onClick={() => { this.getFilePage(this.state.filesPage+1) }}
+                            onClick={() => this.getFilePage(this.state.filesPage+1, { getUserFiles: true })}
                             >Next</button>
                 </div>
                 {(this.state.searchedFiles || []).map(file => {
                     return (
                         <div key={file._id} className="file-meta-data">
                             <p><strong>{file._id}</strong></p>
-                            <p>{file.fileName}</p>
+                            <p>{file.filename}</p>
                             <p>{file.privacy}</p>
                             <button
                                 type="button"
