@@ -182,27 +182,35 @@ function main(app, database) {
         (req, res) => {
             if (req.body._id) {
                 try {
-                    req.body._id = MongoDB.ObjectId(req.body._id)
+                    req.body._id = MongoDB.ObjectId(req.body._id);
                 }
                 catch {
-                    delete req.body._id
+                    delete req.body._id;
                 }
             }
-            else if (req.body._id === "" || req.body.user === null) delete req.body._id
+            else if (req.body._id === "" || req.body.user === null) delete req.body._id;
 
             if (req.body.user) {
                 try {
-                    req.body.user = MongoDB.ObjectId(req.body.user)
+                    req.body.user = MongoDB.ObjectId(req.body.user);
                 }
                 catch {
-                    delete req.body.user
+                    delete req.body.user;
                 }
             }
-            else if (req.body.user === "" || req.body.user === null) delete req.body.user
+            else if (req.body.user === "" || req.body.user === null) delete req.body.user;
 
             if (req.body.filename) {
-
+                try {
+                    req.body.filename = {
+                        $regex: "^" + req.body.filename
+                    };
+                }
+                catch {
+                    delete req.body.filename;
+                }
             }
+            else if (req.body.filename === "" || req.body.filename === null) delete req.body.filename;
 
             if (req.body.getUserFiles) {
                 delete req.body.getUserFiles;
