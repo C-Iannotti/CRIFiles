@@ -300,34 +300,22 @@ export function updateFile(fileId, trustedUsers, comment, privacy, callback=(() 
         })
 };
 
-export function registerUser(username, password, displayname, callback=(() => { return })) {
-    if (!username.match(new RegExp(process.env.REACT_APP_USERNAME_VERIFICATION))) {
-        this.setState({
-            errorMessage: "Unable to register username"
+export function registerUser(username, password, displayname, callback=(() => { return })) {      
+    axios.post(SERVER_URL + process.env.REACT_APP_REGISTER_PATH, {
+            username: username,
+            password: password,
+            displayname: displayname
+        },
+        {
+            withCredentials: true
+        })
+        .then(res => {
+            callback(null, res);
+        })
+        .catch(err => {
+            callback(err, err.response);
         });
-    }
-    else if (!password.match(new RegExp(process.env.REACT_APP_PASSWORD_VERIFICATION))) {
-        this.setState({
-            errorMessage: "Unable to register password"
-        });
-    }
-    else {         
-        axios.post(SERVER_URL + process.env.REACT_APP_REGISTER_PATH, {
-                username: username,
-                password: password,
-                displayname: displayname
-            },
-            {
-                withCredentials: true
-            })
-            .then(res => {
-                this.setState({ dropdownState: "logged-in" }, () => callback());
-            })
-            .catch(err => {
-                console.error(err);
-            });
-    }
-}
+};
 
 export function loginUser(username, password, callback=(() => { return })) {
     axios.post(SERVER_URL + process.env.REACT_APP_LOGIN_PATH, {
@@ -338,9 +326,9 @@ export function loginUser(username, password, callback=(() => { return })) {
             withCredentials: true
         })
         .then(res => {
-            this.setState({ dropdownState: "logged-in" }, () => callback());
+            callback(null, res);
         })
         .catch(err => {
-            console.error(err);
+            callback(err, err.response);
         });
-} 
+}; 

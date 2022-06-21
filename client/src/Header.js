@@ -50,12 +50,19 @@ class Header extends React.Component {
         let password = document.getElementById("password").value;
         let displayname = document.getElementById("displayname").value;
 
-        this.registerUser(username, password, displayname, () => {
-            this.props.navigate(process.env.REACT_APP_USER_PAGE);
-            if (!$("#login-dropdown").hasClass("login-dropdown-display")) {
-                $("#login-dropdown").toggleClass('login-dropdown-display');
+        this.registerUser(username, password, displayname, (err, res) => {
+            if (err) this.setState({ errorMessage: res.data.errorMessage });
+            else {
+                this.props.navigate(process.env.REACT_APP_USER_PAGE);
+                if (!$("#login-dropdown").hasClass("login-dropdown-display")) {
+                    $("#login-dropdown").toggleClass('login-dropdown-display');
+                }
+                this.getDisplayName();
+                this.setState({
+                    dropdownState: "logged-in",
+                    errorMessage: ""
+                });
             }
-            this.getDisplayName();
         });
     }
 
@@ -63,12 +70,19 @@ class Header extends React.Component {
         let username = document.getElementById("username").value;
         let password = document.getElementById("password").value;
 
-        this.loginUser(username, password, () => {
-            this.props.navigate(process.env.REACT_APP_USER_PAGE);
-            if (!$("#login-dropdown").hasClass("login-dropdown-display")) {
-                $("#login-dropdown").toggleClass('login-dropdown-display');
+        this.loginUser(username, password, (err) => {
+            if (err) this.setState({ errorMessage: "Invalid username/password" });
+            else {
+                this.props.navigate(process.env.REACT_APP_USER_PAGE);
+                if (!$("#login-dropdown").hasClass("login-dropdown-display")) {
+                    $("#login-dropdown").toggleClass('login-dropdown-display');
+                }
+                this.getDisplayName();
+                this.setState({
+                    dropdownState: "logged-in",
+                    errorMessage: undefined
+                });
             }
-            this.getDisplayName();
         })
     }
 

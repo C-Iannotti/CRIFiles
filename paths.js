@@ -29,31 +29,43 @@ function main(app, database) {
     //API path for registering a user
     app.post(process.env.REGISTER_PATH,
         function(req, res, next) {
-            const username = req.body.username;
-            const password = req.body.password;
-            const displayname = req.body.displayname
+            const username = req.body.username || "";
+            const password = req.body.password || "";
+            const displayname = req.body.displayname || "";
 
-            userCollection.findOne({
-                    username: username
-                },
-                function(err, user) {
-                    if (err || user) res.status(400).send();
-                    else {
-                        const salt = bcrypt.genSaltSync(SALT_ROUNDS);
-                        const hash = bcrypt.hashSync(password, salt);
-                        userCollection.insertOne({
-                                username: username,
-                                password: hash,
-                                displayname: displayname
-                            },
-                            function(err, doc) {
-                                if(err) res.status(400).send();
-                                next(null, doc);
-                            }
-                        )
+            if (!username.match(new RegExp(process.env.USERNAME_VERIFICATION))) {
+                res.status(400).json({ errorMessage: "Invalid username"});
+            }
+            else if (!password.match(new RegExp(process.env.PASSWORD_VERIFICATION))) {
+                res.status(400).json({ errorMessage: "Invalid password"});
+            }
+            else if (!displayname.match(new RegExp(process.env.DISPLAYNAME_VERIFICATION))) {
+                res.status(400).json({ errorMessage: "Invalid displayname"});
+            }
+            else {
+                userCollection.findOne({
+                        username: username
+                    },
+                    function(err, user) {
+                        if (err) res.status(500).json({ errorMessage: "Server error"});
+                        else if (user) res.status(400).json({ errorMessage: "Username already exists"});
+                        else {
+                            const salt = bcrypt.genSaltSync(SALT_ROUNDS);
+                            const hash = bcrypt.hashSync(password, salt);
+                            userCollection.insertOne({
+                                    username: username,
+                                    password: hash,
+                                    displayname: displayname
+                                },
+                                function(err, doc) {
+                                    if(err) res.status(500).json({errorMessage: "Server error"});
+                                    next(null, doc);
+                                }
+                            )
+                        }
                     }
-                }
-            )
+                )
+            }
         },
         passport.authenticate("local", { failureRedirect: "/" }),
         function(req, res) {
