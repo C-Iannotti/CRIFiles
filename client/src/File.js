@@ -47,9 +47,10 @@ class File extends React.Component {
     }
 
     checkFile() {
-        this.getFileMetadata(this.props.params.fileId, this.props.params.token, res => {
-            this.getTrustedUsersPage(1);
-            if (res.status === 500 || !res.data.isAccessible) {
+        this.getFileMetadata(this.props.params.fileId, this.props.params.token, (err, res) => {
+            console.log("here")
+            if (err || !res.data.isAccessible) {
+                console.log("Here")
                 this.props.useDatabase(db => {
                     let request = db.transaction([DB_STORE_NAME], "readwrite")
                                     .objectStore(DB_STORE_NAME)
@@ -63,8 +64,11 @@ class File extends React.Component {
                 });
                 this.props.navigate(-1);
             }
-            else if (res.data.size <= process.env.REACT_APP_MAX_FILE_SIZE) {
-                this.retrieveFile(this.props.useDatabase, this.displayFile);
+            else {
+                if (res.data.size <= process.env.REACT_APP_MAX_FILE_SIZE) {
+                    this.retrieveFile(this.props.useDatabase, this.displayFile);
+                }
+                this.getTrustedUsersPage(1);
             }
         })
     }

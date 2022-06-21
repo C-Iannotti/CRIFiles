@@ -144,11 +144,11 @@ export function getFileMetadata(fileId, token=undefined, callback=(() => { retur
         })
         .then(res => {
             this.setState(res.data, () => {
-                callback(res);
+                callback(null, res);
             });
         })
         .catch(err => {
-            console.error(err);
+            callback(err, null);
         });
 };
 
