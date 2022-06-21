@@ -59,7 +59,7 @@ class User extends React.Component {
 
     getFileDisplayHTML() {
         return (
-            <div className="file-search">
+            <div className="file-search-container">
                 {this.state.totalFiles !== null && <p>{this.state.totalFiles}</p>}
                 <div id="page-navigator" className="page-navigator">
                     <button type="button"

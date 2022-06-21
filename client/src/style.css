@@ -43,7 +43,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
 }
 
 .pre-display {
@@ -150,9 +150,40 @@
     text-decoration: underline;
 }
 
-.file-search {
+.home-file-search {
+    display: flex;
+    flex-direction: row;
+}
+
+.file-search-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+.file-search-inputs {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.clear-button {
+    position: relative;
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    color: rgb(215, 51, 51);
+    display: inline-block;
+}
+
+.page-number-max {
+    margin: 5px;
+}
+
+.page-number-input {
+    width: 30px;
+    margin: 5px;
 }
