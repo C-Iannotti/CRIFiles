@@ -266,15 +266,15 @@ export function retrieveFile(database, callback=(() => { return })) {
                             console.error("Unable to locally store file: " + event.target.errorCode);
                         };
 
-                        callback(res.data);
+                        callback(null, res.data);
                     })
                     .catch(err => {
-                        console.error(err);
+                        callback(err, err.res);
                     });
             }
             else {
                 console.log("Found local file");
-                callback(cursor.value.blob);
+                callback(null, cursor.value.blob);
             }
         }
     });
@@ -293,10 +293,10 @@ export function updateFile(fileId, trustedUsers, comment, privacy, callback=(() 
         withCredentials: true
         })
         .then(res => {
-            callback(res)
+            callback(null, res)
         })
         .catch(err => {
-            this.setState({ errorMessage: "Unable to update file's metadata" })
+            callback(err, err.response);
         })
 };
 

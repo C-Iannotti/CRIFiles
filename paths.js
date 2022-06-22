@@ -336,17 +336,28 @@ function main(app, database) {
                 _id: MongoDB.ObjectId(req.body.fileId)
             },
             function(err, doc) {
-                if (err || doc === null) res.status(500).send();
+                if (err || doc === null) {
+                    res.status(500).json({
+                        errorMessage: "Unable to retrieve file"
+                    });
+                }
                 else if (!(doc.privacy === "public" || (req.user._id.equals(doc.user))
                 || (doc.privacy === "private" && doc.trustedUsers[req.user._id.toString()] !== undefined)
                 || (doc.privacy === "shared" && req.body.token === doc.token.toString()))){
-                    res.status(500).send();
+                    res.status(500).json({
+                        errorMessage: "Invalid permissions to retrieve file"
+                    });
                 }
                 else {
                     const cursor = fileBucket.find({ _id: MongoDB.ObjectId(req.body.fileId) });
                     cursor.next((err, doc) => {
-                        if (err || !doc) res.status(500).send();
+                        if (err || !doc) {
+                            res.status(500).json({
+                                errorMessage: "Failure in sending file"
+                            });
+                        }
                         else {
+                            res.setHeader("Content-Type", doc.metadata.mimetype);
                             fileBucket.openDownloadStream(MongoDB.ObjectId(req.body.fileId))
                                 .pipe(res);
                         }
@@ -422,7 +433,11 @@ function main(app, database) {
                     privacy: req.body.privacy
                 }},
                 function(err, doc) {
-                    if (err || doc.value === null) res.status(500).send();
+                    if (err || doc.value === null) {
+                        res.status(500).json({
+                            errorMessage: "Unable to update file's metadata"
+                        });
+                    }
                     else {
                         res.status(204).send();
                     };

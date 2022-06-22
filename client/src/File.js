@@ -35,7 +35,6 @@ class File extends React.Component {
         this.updateFile = updateFile.bind(this);
         this.displayFile = this.displayFile.bind(this);
         this.downloadFile = this.downloadFile.bind(this);
-        this.retrieveFile = this.retrieveFile.bind(this);
         this.checkFile = this.checkFile.bind(this);
         this.updateFileMetadata = this.updateFileMetadata.bind(this);
         this.getUserFormHTML = this.getUpdateFormHTML.bind(this);
@@ -66,7 +65,13 @@ class File extends React.Component {
             }
             else {
                 if (res.data.size <= process.env.REACT_APP_MAX_FILE_SIZE) {
-                    this.retrieveFile(this.props.useDatabase, this.displayFile);
+                    this.retrieveFile(this.props.useDatabase, (err, res) => {
+                        if (err) this.setState({ errorMessage: res.data.errorMessage })
+                        else {
+                            console.log(res)
+                            this.displayFile(res)
+                        };
+                    });
                 }
                 this.getTrustedUsersPage(1);
             }
@@ -77,8 +82,11 @@ class File extends React.Component {
         let comment = document.getElementById("comment-input").value;
         let privacy = document.getElementById("privacy-input").value;
         
-        this.updateFile(this.props.params.fileId, this.state.trustedUsers || {}, comment, privacy, () => {
-            this.getFileMetadata(this.props.params.fileId, this.props.params.token)
+        this.updateFile(this.props.params.fileId, this.state.trustedUsers || {}, comment, privacy, (err, res) => {
+            if (err) console.error(err)//this.setState({ errorMessage: res.data.errorMessage});
+            else {
+                this.getFileMetadata(this.props.params.fileId, this.props.params.token)
+            }
         });
     }
 
@@ -97,6 +105,7 @@ class File extends React.Component {
         let url = window.URL.createObjectURL(blob);
         let supportedFiles = JSON.parse(process.env.REACT_APP_SUPPORTED_FILES); 
         let fileSupport = supportedFiles[this.state.mimetype.split('/', 1)[0]];
+        console.log(this.state.mimetype)
 
         if (fileSupport && (
                 !Array.isArray(fileSupport["types"]) ||
@@ -262,7 +271,15 @@ class File extends React.Component {
                 <p>File Page</p>
                 <p><strong>{this.props.params.fileId}</strong></p>
                 <div id="file-display-holder">{this.state.tag}</div>
-                <button type="button" id="download-button" className="download-button" onClick={() => this.retrieveFile(this.props.useDatabase, this.downloadFile)}>Download File</button>
+                <button type="button"
+                        id="download-button"
+                        className="download-button"
+                        onClick={() => this.retrieveFile(this.props.useDatabase, (err, res) => {
+                            if (err) this.setState({ errorMessage: res.data.errorMessage });
+                            else {
+                                this.downloadFile();
+                            }
+                        })}>Download File</button>
                 <button type="button" id="delete-button" className="delete-button" onClick={() => this.deleteFile(this.props.params.fileId, () => this.props.navigate(-1))}>Delete File</button>
                 <br />
                 {this.state.errorMessage !== null && <p id="update-form-error" className="error-message">{this.state.errorMessage}</p>}
