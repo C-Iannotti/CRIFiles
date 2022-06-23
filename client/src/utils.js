@@ -23,14 +23,10 @@ export function getFilePage(page, data, callback=(() => { return })) {
                     data: data
                     })
                     .then(res => {
-                        this.setState({
-                            searchedFiles: res.data.files,
-                            totalFiles: res.data.totalFiles,
-                            filesController: undefined
-                        });
+                        callback(null, res)
                     })
                     .catch(err => {
-                        console.error(err);
+                        callback(err, err.response)
                     });
             }
         });
@@ -41,10 +37,10 @@ export function getFilePage(page, data, callback=(() => { return })) {
 };
 
 export function getSearchedUsersPage(userString, pageNumber, callback=(() => { return })) {
-    if (pageNumber >= 1 &&
+    if (pageNumber === 1 || (pageNumber > 1 &&
             ((this.state.moreSearchedUsers === false && this.state.searchedUsersPage > pageNumber)
             || (this.state.moreSearchedUsers === undefined && userString !== "")
-            || this.state.moreSearchedUsers === true)) {
+            || this.state.moreSearchedUsers === true))) {
         this.setState({
             searchedUsers: [],
             usersInput: userString,
@@ -60,13 +56,10 @@ export function getSearchedUsersPage(userString, pageNumber, callback=(() => { r
                         withCredentials: true,
                     })
                     .then(res => {
-                        this.setState({
-                            searchedUsers: res.data.users,
-                            moreSearchedUsers: res.data.moreSearchedUsers,
-                        }, () => callback());
+                        callback(null, res);
                     })
                     .catch(err => {
-                        console.error(err);
+                        callback(err, err.response);
                     });
             }
         })
@@ -123,12 +116,10 @@ export function getDisplayName(callback=(() => { return })) {
         withCredentials: true
         })
         .then(res => {
-            this.setState({ displayname: res.data.displayname }, () => {
-                callback(res);
-            });
+            callback(null, res);
         })
         .catch(err => {
-            console.error(err);
+            callback(err, err.response);
         })
 };
 
@@ -148,7 +139,7 @@ export function getFileMetadata(fileId, token=undefined, callback=(() => { retur
             });
         })
         .catch(err => {
-            callback(err, null);
+            callback(err, err.response);
         });
 };
 
@@ -162,10 +153,10 @@ export function deleteFile(fileId, callback=(() => { return })) {
         withCredentials: true
         })
         .then(res => {
-            callback();
+            callback(null, res);
         })
         .catch(err => {
-            console.error(err);
+            callback(err, err.response);
         });
 };
 
@@ -179,10 +170,10 @@ export function createNewToken(fileId, callback=(() => { return })) {
         }
         })
         .then(res => {
-            callback();
+            callback(null, res);
         })
         .catch(err => {
-            console.error(err);
+            callback(err, err.response);
         });
 };
 
@@ -193,10 +184,10 @@ export function logout(callback=(() => { return })) {
         withCredentials: true
         })
         .then(res => {
-            callback();
+            callback(null, res);
         })
         .catch(err => {
-            console.error(err)
+            callback(err, err.response)
         });
 };
 
@@ -214,12 +205,10 @@ export function uploadFile(file, privacy, trustedUsers, comment, callback=() => 
         withCredentials: true
         })
         .then(res => {
-            this.setState({
-                trustedUsers: {}
-            }, () => callback());
+            callback(null, res)
         })
         .catch(err => {
-            console.error(err);
+            callback(err, err.response);
         })
 };
 
@@ -269,7 +258,7 @@ export function retrieveFile(database, callback=(() => { return })) {
                         callback(null, res.data);
                     })
                     .catch(err => {
-                        callback(err, err.res);
+                        callback(err, err.response);
                     });
             }
             else {

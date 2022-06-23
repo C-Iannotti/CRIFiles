@@ -87,7 +87,7 @@ function main(app, database) {
         function(req, res) {
             req.logout();
             res.clearCookie("express.sid");
-            res.send("logged out");
+            res.status(204).send();
         })
 
     //API path for retrieving a display name
@@ -151,9 +151,7 @@ function main(app, database) {
     app.post(process.env.UPLOAD_PATH,
         ensureAuthenticated(),
         multer( { dest: process.env.DATA_PATH}).single("userFile"),
-        function(req, res) {
-            res.status(204);
-            
+        function(req, res) {            
             try {
                 const stream = fileBucket.openUploadStream(req.file.filename, {
                     chunkSizeBytes: 1048576,
@@ -173,19 +171,24 @@ function main(app, database) {
                         token: crypto.randomBytes(48).toString("base64url")
                     },
                     function(err, doc) {
-                        if (err) res.status(400);
+                        if (err) res.status(400).json({
+                            errorMessage: "Error registering file"
+                        });
+                        else {
+                            res.status(204).send();
+                        }
                     }
                 )
             } catch(e) {
                 console.error(e);
-                res.status(400);
+                res.status(400).json({
+                    errorMessage: "Error uploading file"
+                });
             } finally {
                 fs.rm(process.env.DATA_PATH + req.file.filename, err => {
                     if (err) console.error(err);
                 });
             }
-
-            res.send();
         }
     );
 
@@ -330,8 +333,15 @@ function main(app, database) {
 
     //API for retrieving a single file
     app.post(process.env.RETRIEVE_FILE_PATH,
-        ensureAuthenticated(),
         function(req, res) {
+            let userId;
+            try {
+                userId = req.user._id;
+            }
+            catch {
+                userId = MongoDB.ObjectId();
+            }
+            
             fileCollection.findOne({
                 _id: MongoDB.ObjectId(req.body.fileId)
             },
@@ -341,8 +351,8 @@ function main(app, database) {
                         errorMessage: "Unable to retrieve file"
                     });
                 }
-                else if (!(doc.privacy === "public" || (req.user._id.equals(doc.user))
-                || (doc.privacy === "private" && doc.trustedUsers[req.user._id.toString()] !== undefined)
+                else if (!(doc.privacy === "public" || (userId.equals(doc.user))
+                || (doc.privacy === "private" && doc.trustedUsers[userId.toString()] !== undefined)
                 || (doc.privacy === "shared" && req.body.token === doc.token.toString()))){
                     res.status(500).json({
                         errorMessage: "Invalid permissions to retrieve file"
@@ -389,8 +399,15 @@ function main(app, database) {
 
     //API for getting a file's meta data
     app.post(process.env.RETRIEVE_METADATA_PATH,
-        ensureAuthenticated(),
         function(req, res) {
+            let userId;
+            try {
+                userId = req.user._id;
+            }
+            catch {
+                userId = MongoDB.ObjectId();
+            }
+            
             fileCollection.findOne({
                     _id: MongoDB.ObjectId(req.body.fileId)
                 },
@@ -405,13 +422,12 @@ function main(app, database) {
                             trustedUsers: doc.trustedUsers,
                             size: doc.size,
                             mimetype: doc.mimetype,
-                            isUsers: doc.user.toString() === req.user._id.toString(),
+                            isUsers: doc.user.toString() === userId.toString(),
                             comment: doc.comment,
                             token: doc.token.toString(),
-                            isAccessible: (doc.privacy === "public"
-                                || (doc.privacy === "private" && doc.trustedUsers[req.user._id.toString()] !== undefined)
-                                || (doc.privacy === "shared" && req.body.token === doc.token.toString())
-                                || (req.user._id.equals(doc.user)))
+                            isAccessible: (doc.privacy === "public" || req.user._id.equals(doc.user)
+                                || (doc.privacy === "private" && doc.trustedUsers[userId.toString()] !== undefined)
+                                || (doc.privacy === "shared" && req.body.token === doc.token.toString()))
                         });
                     }
                 }

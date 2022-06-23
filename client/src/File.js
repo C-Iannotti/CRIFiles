@@ -33,6 +33,7 @@ class File extends React.Component {
         this.getTrustedUsersPage = getTrustedUsersPage.bind(this);
         this.retrieveFile = retrieveFile.bind(this);
         this.updateFile = updateFile.bind(this);
+        this.handleUserSearch = this.handleUserSearch.bind(this);
         this.displayFile = this.displayFile.bind(this);
         this.downloadFile = this.downloadFile.bind(this);
         this.checkFile = this.checkFile.bind(this);
@@ -47,9 +48,8 @@ class File extends React.Component {
 
     checkFile() {
         this.getFileMetadata(this.props.params.fileId, this.props.params.token, (err, res) => {
-            console.log("here")
             if (err || !res.data.isAccessible) {
-                console.log("Here")
+                console.log(res)
                 this.props.useDatabase(db => {
                     let request = db.transaction([DB_STORE_NAME], "readwrite")
                                     .objectStore(DB_STORE_NAME)
@@ -68,7 +68,6 @@ class File extends React.Component {
                     this.retrieveFile(this.props.useDatabase, (err, res) => {
                         if (err) this.setState({ errorMessage: res.data.errorMessage })
                         else {
-                            console.log(res)
                             this.displayFile(res)
                         };
                     });
@@ -83,9 +82,42 @@ class File extends React.Component {
         let privacy = document.getElementById("privacy-input").value;
         
         this.updateFile(this.props.params.fileId, this.state.trustedUsers || {}, comment, privacy, (err, res) => {
-            if (err) console.error(err)//this.setState({ errorMessage: res.data.errorMessage});
+            if (err) console.error(err);
             else {
-                this.getFileMetadata(this.props.params.fileId, this.props.params.token)
+                this.getFileMetadata(this.props.params.fileId, this.props.params.token, (err, res) => {
+                    if (err) {
+                        console.error(err);
+                        this.props.navigate(-1);
+                    }
+                    else {
+                        this.getTrustedUsersPage(this.state.trustedUsersPage);
+                    }
+                });
+            }
+        });
+    }
+
+    handleUserSearch(userString, page) {
+        document.getElementById("previous-searched-users-button").setAttribute("disabled", "true")
+        document.getElementById("next-searched-users-button").setAttribute("disabled", "true")
+        this.getSearchedUsersPage(userString, page, (err, res) => {
+            if (err) {
+                console.error(err);
+                document.getElementById("previous-searched-users-button").removeAttribute("disabled");
+                document.getElementById("next-searched-users-button").removeAttribute("disabled");
+            }
+            else if (res) {
+                this.setState({
+                    searchedUsers: res.data.users,
+                    moreSearchedUsers: res.data.moreSearchedUsers,
+                }, () => {
+                    document.getElementById("previous-searched-users-button").removeAttribute("disabled");
+                    document.getElementById("next-searched-users-button").removeAttribute("disabled");
+                });
+            }
+            else {
+                document.getElementById("previous-searched-users-button").removeAttribute("disabled");
+                document.getElementById("next-searched-users-button").removeAttribute("disabled");
             }
         });
     }
@@ -105,7 +137,6 @@ class File extends React.Component {
         let url = window.URL.createObjectURL(blob);
         let supportedFiles = JSON.parse(process.env.REACT_APP_SUPPORTED_FILES); 
         let fileSupport = supportedFiles[this.state.mimetype.split('/', 1)[0]];
-        console.log(this.state.mimetype)
 
         if (fileSupport && (
                 !Array.isArray(fileSupport["types"]) ||
@@ -151,36 +182,20 @@ class File extends React.Component {
                        className="trusted-users-input"
                        name="trustedUsers"
                        value={this.state.usersInput}
-                       onChange={e => {this.getSearchedUsersPage(e.target.value, 1)}}
-                       maxLength="500"
+                       onChange={e => this.handleUserSearch(e.target.value, 1)}
+                       maxLength="20"
                 />
                 <div className="users-display">
                     <div className="searched-users-display">
                         <button type="button"
                                 id="previous-searched-users-button"
                                 className="page-button"
-                                onClick={() => {
-                                        document.getElementById("previous-searched-users-button").setAttribute("disabled", "true")
-                                        document.getElementById("next-searched-users-button").setAttribute("disabled", "true")
-                                        this.getSearchedUsersPage(this.state.usersInput, this.state.searchedUsersPage-1, () => {
-                                            document.getElementById("previous-searched-users-button").removeAttribute("disabled")
-                                            document.getElementById("next-searched-users-button").removeAttribute("disabled")
-                                        })
-                                    }
-                                }
+                                onClick={() => this.handleUserSearch(this.state.usersInput, this.state.searchedUsersPage-1)}
                                 >Previous</button>
                         <button type="button"
                                 id="next-searched-users-button"
                                 className="page-button"
-                                onClick={() => {
-                                        document.getElementById("previous-searched-users-button").setAttribute("disabled", "true")
-                                        document.getElementById("next-searched-users-button").setAttribute("disabled", "true")
-                                        this.getSearchedUsersPage(this.state.usersInput, this.state.searchedUsersPage+1, () => {
-                                            document.getElementById("previous-searched-users-button").removeAttribute("disabled")
-                                            document.getElementById("next-searched-users-button").removeAttribute("disabled")
-                                        })
-                                    }
-                                }
+                                onClick={() => this.handleUserSearch(this.state.usersInput, this.state.searchedUsersPage+1)}
                                 >Next</button>
                         {(this.state.searchedUsers || []).map(user => {
                             return (
@@ -237,7 +252,12 @@ class File extends React.Component {
                     </div>
                 </div>
                 <input type="text" id="comment-input" className="comment-input" defaultValue={this.state.comment} maxLength="500" />
-                <input type="reset" id="metadata-reset-button" className="metadata-reset-button" value="Reset" onClick={() => this.getFileMetadata(this.props.params.fileId, undefined, () => this.getTrustedUsersPage(this.state.trustedUsersPage))}/>
+                <input type="reset" id="metadata-reset-button" className="metadata-reset-button" value="Reset" onClick={() => this.getFileMetadata(this.props.params.fileId, undefined, (err, res) => {
+                    if (err) console.error(err);
+                    else {
+                        this.getTrustedUsersPage(this.state.trustedUsersPage)
+                    }
+                })}/>
                 <button type="button" id="metadata-update-button" className="metadata-update-button" onClick={this.updateFileMetadata}>Update</button>
             </form>
         )
@@ -258,7 +278,17 @@ class File extends React.Component {
                 <button type="button"
                         id="token-update-button"
                         className="token-update-button"
-                        onClick={() => this.createNewToken(this.props.params.fileId, () => this.getFileMetadata(this.props.params.fileId, this.props.params.token))}
+                        onClick={() => this.createNewToken(this.props.params.fileId, err => {
+                            if (err) console.error(err);
+                            else {
+                                this.getFileMetadata(this.props.params.fileId, this.props.params.token, err => {
+                                    if (err) console.error(err);
+                                    else {
+                                        this.getTrustedUsersPage(this.state.trustedUsersPage);
+                                    }
+                                })
+                            }
+                        })}
                         readOnly
                         >New Url</button>
             </div>
@@ -280,7 +310,12 @@ class File extends React.Component {
                                 this.downloadFile();
                             }
                         })}>Download File</button>
-                <button type="button" id="delete-button" className="delete-button" onClick={() => this.deleteFile(this.props.params.fileId, () => this.props.navigate(-1))}>Delete File</button>
+                <button type="button" id="delete-button" className="delete-button" onClick={() => this.deleteFile(this.props.params.fileId, (err, res) => {
+                    if (err) console.error(err);
+                    else {
+                        this.props.navigate(-1);
+                    }
+                })}>Delete File</button>
                 <br />
                 {this.state.errorMessage !== null && <p id="update-form-error" className="error-message">{this.state.errorMessage}</p>}
                 {this.state.isUsers && this.getUpdateFormHTML()}

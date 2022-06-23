@@ -26,8 +26,14 @@ class Header extends React.Component {
     }
 
     componentDidMount() {
-        this.getDisplayName(() => {
-            if (this.state.displayname) this.setState({dropdownState: "logged-in"});
+        this.getDisplayName((err, res) => {
+            if (err) console.error(err);
+            else if (res.data.displayname) {
+                this.setState({
+                    displayname: res.data.displayname,
+                    dropdownState: "logged-in"
+                });
+            }
         });
         window.addEventListener("click", this.handleClick);
     }
@@ -57,10 +63,15 @@ class Header extends React.Component {
                 if (!$("#login-dropdown").hasClass("login-dropdown-display")) {
                     $("#login-dropdown").toggleClass('login-dropdown-display');
                 }
-                this.getDisplayName();
-                this.setState({
-                    dropdownState: "logged-in",
-                    errorMessage: ""
+                this.getDisplayName((err, res) => {
+                    if (err) console.error(err);
+                    else if (res.data.displayname) {
+                        this.setState({
+                            displayname: res.data.displayname,
+                            dropdownState: "logged-in",
+                            errorMessage: undefined
+                        });
+                    }
                 });
             }
         });
@@ -77,10 +88,15 @@ class Header extends React.Component {
                 if (!$("#login-dropdown").hasClass("login-dropdown-display")) {
                     $("#login-dropdown").toggleClass('login-dropdown-display');
                 }
-                this.getDisplayName();
-                this.setState({
-                    dropdownState: "logged-in",
-                    errorMessage: undefined
+                this.getDisplayName((err, res) => {
+                    if (err) console.error(err);
+                    else if (res.data.displayname) {
+                        this.setState({
+                            displayname: res.data.displayname,
+                            dropdownState: "logged-in",
+                            errorMessage: undefined
+                        });
+                    }
                 });
             }
         })
@@ -115,15 +131,25 @@ class Header extends React.Component {
                 <button type="button"
                         id="logout-button"
                         className="logout-button"
-                        onClick={() => (this.logout(() => {
-                            if (this.props.location.pathname !== "/") {
-                                this.props.navigate("/");
+                        onClick={() => (this.logout((err, res) => {
+                            if (err) console.error(err);
+                            else {
+                                if (this.props.location.pathname !== "/") {
+                                    this.props.navigate("/");
+                                }
+                                if (!$("#login-dropdown").hasClass("login-dropdown-display")) {
+                                    $("#login-dropdown").toggleClass('login-dropdown-display');
+                                }
+                                this.getDisplayName((err, res) => {
+                                    if (err) console.error(err);
+                                    else if (!res.data.displayname) {
+                                        this.setState({
+                                            displayname: res.data.displayname,
+                                            dropdownState: "login"
+                                        });
+                                    }
+                                });
                             }
-                            if (!$("#login-dropdown").hasClass("login-dropdown-display")) {
-                                $("#login-dropdown").toggleClass('login-dropdown-display');
-                            }
-                            this.getDisplayName();
-                            this.setState({ dropdownState: "login" });
                         }))}
                         >Logout</button>
             )

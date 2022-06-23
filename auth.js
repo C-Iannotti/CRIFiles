@@ -49,7 +49,9 @@ function auth(app, database) {
 function ensureAuthenticated() {
     return function (req, res, next) {
         if (req.isAuthenticated()) return next()
-        res.status(511).send()
+        res.status(511).json({
+            errorMessage: "Need to be signed in"
+        });
     }
 }
 

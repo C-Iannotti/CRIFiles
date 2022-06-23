@@ -16,26 +16,35 @@ class Home extends React.Component {
         };
 
         this.getFilePage = getFilePage.bind(this);
-        this.handleSearch = this.handleSearch.bind(this);
+        this.handleFileSearch = this.handleFileSearch.bind(this);
         this.filePageInputKeyDown = this.filePageInputKeyDown.bind(this);
         this.getFileDisplayHTML = this.getFileDisplayHTML.bind(this);
     }
 
     componentDidMount() {
-        this.getFilePage(1);
+        this.handleFileSearch(1);
     }
 
     filePageInputKeyDown(e) {
         if (e.key === "Enter") {
-            this.handleSearch(Number($("#page-number-input").val()))
+            this.handleFileSearch(Number($("#page-number-input").val()))
         }
     }
 
-    handleSearch(page) {
+    handleFileSearch(page) {
         this.getFilePage(page, {
             user: this.state.userInput,
             filename: this.state.filenameInput,
             _id: this.state.idInput
+        }, (err, res) => {
+            if (err) console.error(err);
+            else if (res) {
+                this.setState({
+                    searchedFiles: res.data.files,
+                    totalFiles: res.data.totalFiles,
+                    filesController: undefined
+                });
+            }
         })
     }
 
@@ -50,7 +59,7 @@ class Home extends React.Component {
                                 this.setState({
                                     userInput: "",
                                     idInput: "",
-                                    filenameInput: ""}, () => this.handleSearch(this.state.filesPage, this.state.search))
+                                    filenameInput: ""}, () => this.handleFileSearch(this.state.filesPage, this.state.search))
                                 }
                                 }
                             >&#10006;</button>
@@ -60,21 +69,21 @@ class Home extends React.Component {
                             className="home-file-input"
                             placeholder="User ID"
                             value={this.state.userInput}
-                            onChange={e => {this.setState({userInput: e.target.value}, () => this.handleSearch(this.state.filesPage))}}
+                            onChange={e => {this.setState({userInput: e.target.value}, () => this.handleFileSearch(this.state.filesPage))}}
                             />
                         <input type="text"
                             id="id-file-input"
                             className="home-file-input"
                             placeholder="File ID"
                             value={this.state.idInput}
-                            onChange={e => {this.setState({idInput: e.target.value}, () => this.handleSearch(this.state.filesPage))}}
+                            onChange={e => {this.setState({idInput: e.target.value}, () => this.handleFileSearch(this.state.filesPage))}}
                             />
                         <input type="text"
                             id="filename-file-input"
                             className="home-file-input"
                             placeholder="Filename"
                             value={this.state.filenameInput}
-                            onChange={e => {this.setState({filenameInput: e.target.value}, () => this.handleSearch(this.state.filesPage))}}
+                            onChange={e => {this.setState({filenameInput: e.target.value}, () => this.handleFileSearch(this.state.filesPage))}}
                             />
                     </div>
                 </div>
@@ -82,7 +91,7 @@ class Home extends React.Component {
                     <button type="button"
                             id="previous-page-button"
                             className="page-button"
-                            onClick={() => { this.handleSearch(this.state.filesPage-1) }}
+                            onClick={() => { this.handleFileSearch(this.state.filesPage-1) }}
                             >Previous</button>
                     <input type="text"
                             id="page-number-input"
@@ -97,7 +106,7 @@ class Home extends React.Component {
                     <button type="button"
                             id="next-page-button"
                             className="page-button"
-                            onClick={() => { this.handleSearch(this.state.filesPage+1) }}
+                            onClick={() => { this.handleFileSearch(this.state.filesPage+1) }}
                             >Next</button>
                 </div>
                 {(this.state.searchedFiles || []).map(file => {

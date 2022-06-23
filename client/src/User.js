@@ -25,7 +25,8 @@ class User extends React.Component {
         this.getSearchedUsersPage = getSearchedUsersPage.bind(this);
         this.getTrustedUsersPage = getTrustedUsersPage.bind(this)
         this.uploadFile = uploadFile.bind(this);
-        this.handleSearch = this.handleSearch.bind(this);
+        this.handleUserSearch = this.handleUserSearch.bind(this);
+        this.handleFileSearch = this.handleFileSearch.bind(this);
         this.handleUpload = this.handleUpload.bind(this);
         this.filePageInputKeyDown = this.filePageInputKeyDown.bind(this);
         this.handlePageEnter = this.filePageInputKeyDown.bind(this);
@@ -34,9 +35,16 @@ class User extends React.Component {
     }
 
     componentDidMount() {
-        this.getDisplayName(() => {
-            if (this.state.displayname) {
-                this.getFilePage(1, { getUserFiles: true });
+        this.getDisplayName((err, res) => {
+            if (err) {
+                console.error(err);
+                this.props.navigate("/", { replace: true });
+            }
+            else if (res.data.displayname) {
+                this.setState({
+                    displayname: res.data.displayname,
+                });
+                this.handleFileSearch(1);
             }
             else {
                 this.props.navigate("/", { replace: true });
@@ -46,7 +54,7 @@ class User extends React.Component {
 
     filePageInputKeyDown(e) {
         if (e.key === "Enter") {
-            this.getFilePage(Number($("#page-number-input").val()), { getUserFiles: true })
+            this.handleFileSearch(Number($("#page-number-input").val()))
         }
     }
 
@@ -55,17 +63,57 @@ class User extends React.Component {
         let comment = document.getElementById("comment-input").value;
         let privacy = document.getElementById("privacy-input").value;
 
-        this.uploadFile(file, privacy, this.state.trustedUsers || {}, comment, () => {
-            this.getFilePage(this.state.filesPage, { getUserFiles: true });
+        this.uploadFile(file, privacy, this.state.trustedUsers || {}, comment, (err, res) => {
+            if (err) console.error(err);
+            else {
+                this.setState({
+                    trustedUsers: {}
+                });
+                this.handleFileSearch(this.state.filesPage);
+            }
         });
     }
 
-    handleSearch(page) {
+    handleFileSearch(page) {
         this.getFilePage(page, {
             filename: this.state.filenameInput,
             _id: this.state.idInput,
             getUserFiles: true
+        }, (err, res) => {
+            if (err) console.error(err);
+            else if (res) {
+                this.setState({
+                    searchedFiles: res.data.files,
+                    totalFiles: res.data.totalFiles,
+                    filesController: undefined
+                });
+            }
         })
+    }
+
+    handleUserSearch(userString, page) {
+        document.getElementById("previous-searched-users-button").setAttribute("disabled", "true")
+        document.getElementById("next-searched-users-button").setAttribute("disabled", "true")
+        this.getSearchedUsersPage(userString, page, (err, res) => {
+            if (err) {
+                console.error(err);
+                document.getElementById("previous-searched-users-button").removeAttribute("disabled");
+                document.getElementById("next-searched-users-button").removeAttribute("disabled");
+            }
+            else if (res) {
+                this.setState({
+                    searchedUsers: res.data.users,
+                    moreSearchedUsers: res.data.moreSearchedUsers,
+                }, () => {
+                    document.getElementById("previous-searched-users-button").removeAttribute("disabled");
+                    document.getElementById("next-searched-users-button").removeAttribute("disabled");
+                });
+            }
+            else {
+                document.getElementById("previous-searched-users-button").removeAttribute("disabled");
+                document.getElementById("next-searched-users-button").removeAttribute("disabled");
+            }
+        });
     }
 
     getFileDisplayHTML() {
@@ -79,7 +127,7 @@ class User extends React.Component {
                                 this.setState({
                                     userInput: "",
                                     idInput: "",
-                                    filenameInput: ""}, () => this.handleSearch(this.state.filesPage, this.state.search))
+                                    filenameInput: ""}, () => this.handleFileSearch(this.state.filesPage, this.state.search))
                                 }
                                 }
                             >&#10006;</button>
@@ -89,14 +137,14 @@ class User extends React.Component {
                             className="home-file-input"
                             placeholder="File ID"
                             value={this.state.idInput}
-                            onChange={e => {this.setState({idInput: e.target.value}, () => this.handleSearch(this.state.filesPage))}}
+                            onChange={e => {this.setState({idInput: e.target.value}, () => this.handleFileSearch(this.state.filesPage))}}
                             />
                         <input type="text"
                             id="filename-file-input"
                             className="home-file-input"
                             placeholder="Filename"
                             value={this.state.filenameInput}
-                            onChange={e => {this.setState({filenameInput: e.target.value}, () => this.handleSearch(this.state.filesPage))}}
+                            onChange={e => {this.setState({filenameInput: e.target.value}, () => this.handleFileSearch(this.state.filesPage))}}
                             />
                     </div>
                 </div>
@@ -104,7 +152,7 @@ class User extends React.Component {
                     <button type="button"
                             id="previous-page-button"
                             className="page-button"
-                            onClick={() => { this.handleSearch(this.state.filesPage-1) }}
+                            onClick={() => { this.handleFileSearch(this.state.filesPage-1) }}
                             >Previous</button>
                     <input type="text"
                             id="page-number-input"
@@ -119,7 +167,7 @@ class User extends React.Component {
                     <button type="button"
                             id="next-page-button"
                             className="page-button"
-                            onClick={() => { this.handleSearch(this.state.filesPage+1) }}
+                            onClick={() => { this.handleFileSearch(this.state.filesPage+1) }}
                             >Next</button>
                 </div>
                 {(this.state.searchedFiles || []).map(file => {
@@ -155,36 +203,20 @@ class User extends React.Component {
                        className="trusted-users-input"
                        name="trustedUsers"
                        value={this.state.usersInput}
-                       onChange={e => {this.getSearchedUsersPage(e.target.value, this.state.searchedUsersPage || 1)}}
-                       maxLength="500"
+                       onChange={e => {this.handleUserSearch(e.target.value, 1)}}
+                       maxLength="20"
                 />
                 <div className="users-display">
                     <div className="searched-users-display">
                         <button type="button"
                                 id="previous-searched-users-button"
                                 className="page-button"
-                                onClick={() => {
-                                        document.getElementById("previous-searched-users-button").setAttribute("disabled", "true")
-                                        document.getElementById("next-searched-users-button").setAttribute("disabled", "true")
-                                        this.getSearchedUsersPage(this.state.usersInput, this.state.searchedUsersPage-1, () => {
-                                            document.getElementById("previous-searched-users-button").removeAttribute("disabled")
-                                            document.getElementById("next-searched-users-button").removeAttribute("disabled")
-                                        })
-                                    }
-                                }
+                                onClick={() => this.handleUserSearch(this.state.usersInput, this.state.searchedUsersPage-1)}
                                 >Previous</button>
                         <button type="button"
                                 id="next-searched-users-button"
                                 className="page-button"
-                                onClick={() => {
-                                    document.getElementById("previous-searched-users-button").setAttribute("disabled", "true")
-                                    document.getElementById("next-searched-users-button").setAttribute("disabled", "true")
-                                    this.getSearchedUsersPage(this.state.usersInput, this.state.searchedUsersPage+1, () => {
-                                        document.getElementById("previous-searched-users-button").removeAttribute("disabled")
-                                        document.getElementById("next-searched-users-button").removeAttribute("disabled")
-                                    })
-                                }
-                            }
+                                onClick={() => this.handleUserSearch(this.state.usersInput, this.state.searchedUsersPage+1)}
                                 >Next</button>
                         {(this.state.searchedUsers || []).map(user => {
                             return (
