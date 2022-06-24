@@ -11,8 +11,7 @@ class Home extends React.Component {
         this.state = {
             filesInput: 1,
             userInput: "",
-            filenameInput: "",
-            idInput: ""
+            fileInput: ""
         };
 
         this.getFilePage = getFilePage.bind(this);
@@ -34,8 +33,7 @@ class Home extends React.Component {
     handleFileSearch(page) {
         this.getFilePage(page, {
             user: this.state.userInput,
-            filename: this.state.filenameInput,
-            _id: this.state.idInput
+            file: this.state.fileInput
         }, (err, res) => {
             if (err) console.error(err);
             else if (res) {
@@ -58,8 +56,7 @@ class Home extends React.Component {
                             onClick={() => {
                                 this.setState({
                                     userInput: "",
-                                    idInput: "",
-                                    filenameInput: ""}, () => this.handleFileSearch(this.state.filesPage, this.state.search))
+                                    fileInput: ""}, () => this.handleFileSearch(1))
                                 }
                                 }
                             >&#10006;</button>
@@ -67,23 +64,16 @@ class Home extends React.Component {
                         <input type="text"
                             id="user-file-input"
                             className="home-file-input"
-                            placeholder="User ID"
+                            placeholder="User ID or Name"
                             value={this.state.userInput}
-                            onChange={e => {this.setState({userInput: e.target.value}, () => this.handleFileSearch(this.state.filesPage))}}
+                            onChange={e => {this.setState({userInput: e.target.value}, () => this.handleFileSearch(1))}}
                             />
                         <input type="text"
-                            id="id-file-input"
+                            id="file-file-input"
                             className="home-file-input"
-                            placeholder="File ID"
-                            value={this.state.idInput}
-                            onChange={e => {this.setState({idInput: e.target.value}, () => this.handleFileSearch(this.state.filesPage))}}
-                            />
-                        <input type="text"
-                            id="filename-file-input"
-                            className="home-file-input"
-                            placeholder="Filename"
-                            value={this.state.filenameInput}
-                            onChange={e => {this.setState({filenameInput: e.target.value}, () => this.handleFileSearch(this.state.filesPage))}}
+                            placeholder="File ID or Name"
+                            value={this.state.fileInput}
+                            onChange={e => {this.setState({fileInput: e.target.value}, () => this.handleFileSearch(1))}}
                             />
                     </div>
                 </div>

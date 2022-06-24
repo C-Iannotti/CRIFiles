@@ -5,6 +5,7 @@ const SERVER_URL = process.env.REACT_APP_PROTOCOL
 const DB_STORE_NAME = process.env.REACT_APP_IDB_STORE_NAME;
 
 export function getFilePage(page, data, callback=(() => { return })) {
+    console.log(this.state)
     if ((page === 1) || (page > 1 && page <= Math.ceil(this.state.totalFiles / process.env.REACT_APP_PAGE_SIZE))) {
         if (this.state.filesController) this.state.filesController.abort();
         this.setState(({

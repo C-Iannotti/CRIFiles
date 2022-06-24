@@ -23,8 +23,8 @@ function main(app, database) {
     const fileCollection = database.collection("files");
     const fileBucket = new MongoDB.GridFSBucket(database, { bucketName: "file-bucket"});
 
-    userCollection.createIndex( { displayname: "text" })
-    fileCollection.createIndex( { filename: "text" })
+    userCollection.createIndex({ displayname: "text" })
+    fileCollection.createIndex({ filename: "text" })
 
     //API path for registering a user
     app.post(process.env.REGISTER_PATH,
@@ -160,8 +160,9 @@ function main(app, database) {
                 fs.createReadStream(req.file.destination + req.file.filename).pipe(stream);
 
                 fileCollection.insertOne({
-                        user: req.user._id,
                         _id: stream.id,
+                        user: req.user._id,
+                        displyname: req.user.displayname,
                         filename: req.file.originalname,
                         privacy: req.body.privacy,
                         trustedUsers: JSON.parse(req.body.trustedUsers),
@@ -195,49 +196,52 @@ function main(app, database) {
     //API for retrieving page of user's files' metadata
     app.post(process.env.USER_FILES_PATH + "/:pageNum",
         (req, res) => {
-            if (req.body._id) {
+            let searchObject = {}
+            console.log(req.body)
+            if (req.body.file) {
                 try {
-                    req.body._id = MongoDB.ObjectId(req.body._id);
+                    searchObject["_id"] = MongoDB.ObjectId(req.body.file);
                 }
                 catch {
-                    delete req.body._id;
+                    try {
+                        searchObject["filename"] = {
+                            $regex: "^" + req.body.file
+                        };
+                    }
+                    catch (err) {
+                        console.error("Invalid sent file");
+                    }
                 }
             }
-            else if (req.body._id === "" || req.body.user === null) delete req.body._id;
 
             if (req.body.user) {
                 try {
-                    req.body.user = MongoDB.ObjectId(req.body.user);
+                    searchObject["user"] = MongoDB.ObjectId(req.body.user);
                 }
                 catch {
-                    delete req.body.user;
+                    try {
+                        searchObject["displayname"] = {
+                            $regex: "^" + req.body.user
+                        };
+                    }
+                    catch (err) {
+                        console.error("Invalid sent user");
+                    }
                 }
             }
-            else if (req.body.user === "" || req.body.user === null) delete req.body.user;
 
-            if (req.body.filename) {
-                try {
-                    req.body.filename = {
-                        $regex: "^" + req.body.filename
-                    };
-                }
-                catch {
-                    delete req.body.filename;
-                }
-            }
-            else if (req.body.filename === "" || req.body.filename === null) delete req.body.filename;
+            console.log(searchObject)
 
             if (req.body.getUserFiles) {
-                delete req.body.getUserFiles;
                 fileCollection.count(Object.assign({}, {
                     user: req.user._id
-                }, req.body),
+                }, searchObject),
                 (err, count) => {
                     if (err) res.status(500).send();
                     else {
                         fileCollection.find(Object.assign({}, {
                             user: req.user._id
-                        }, req.body),
+                        }, searchObject),
                         {
                             limit: Number(process.env.PAGE_SIZE),
                             sort: { _id: 1},
@@ -268,7 +272,7 @@ function main(app, database) {
                             privacy: "public"
                         }
                     ]
-                }, req.body),
+                }, searchObject),
                 (err, count) => {
                     if (err) res.status(500).send();
                     else {
@@ -285,7 +289,7 @@ function main(app, database) {
                                     privacy: "public"
                                 }
                             ]
-                        }, req.body),
+                        }, searchObject),
                         {
                             limit: Number(process.env.PAGE_SIZE),
                             sort: { _id: 1},
@@ -305,13 +309,13 @@ function main(app, database) {
             else {
                 fileCollection.count(Object.assign({}, {
                     privacy: "public"
-                }, req.body),
+                }, searchObject),
                 (err, count) => {
                     if (err) res.status(500).send();
                     else {
                         fileCollection.find(Object.assign({}, {
                                 privacy: "public"
-                            }, req.body),
+                            }, searchObject),
                         {
                             limit: Number(process.env.PAGE_SIZE),
                             sort: { _id: 1},
