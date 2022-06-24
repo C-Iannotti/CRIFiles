@@ -172,15 +172,12 @@ class User extends React.Component {
                 </div>
                 {(this.state.searchedFiles || []).map(file => {
                     return (
-                        <div key={file._id} className="file-meta-data">
-                            <p><strong>{file._id}</strong></p>
+                        <div key={file._id}
+                            className="file-meta-data"
+                            onClick={() => this.props.navigate(".." + process.env.REACT_APP_FILE_PAGE + "/" + file._id)}
+                            >
                             <p>{file.filename}</p>
                             <p>{file.privacy}</p>
-                            <button
-                                type="button"
-                                className="open-file-button"
-                                onClick={() => this.props.navigate(".." + process.env.REACT_APP_FILE_PAGE + "/" + file._id)}
-                            >Open File</button>
                         </div>
                     )
                 })}

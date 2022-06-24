@@ -169,6 +169,26 @@
     align-items: center;
 }
 
+.file-meta-data {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 350px;
+    height: 50px;
+    border: 1px solid black;
+    cursor: pointer;
+}
+
+.filename-metadata {
+    font-size: 1rem;
+}
+
+.privacy-metadata {
+    font-size: 0.6rem;
+    color:rgb(255, 96, 96)
+}
+
 .clear-button {
     position: relative;
     background: none;
