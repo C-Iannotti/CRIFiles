@@ -7,7 +7,8 @@ import {
     getSearchedUsersPage,
     getTrustedUsersPage,
     getDisplayName,
-    uploadFile
+    uploadFile,
+    deleteFile
 } from "./utils.js"
 
 class User extends React.Component {
@@ -25,6 +26,8 @@ class User extends React.Component {
         this.getSearchedUsersPage = getSearchedUsersPage.bind(this);
         this.getTrustedUsersPage = getTrustedUsersPage.bind(this)
         this.uploadFile = uploadFile.bind(this);
+        this.deleteFile = deleteFile.bind(this);
+        this.handleDelete = this.handleDelete.bind(this);
         this.handleUserSearch = this.handleUserSearch.bind(this);
         this.handleFileSearch = this.handleFileSearch.bind(this);
         this.handleUpload = this.handleUpload.bind(this);
@@ -72,6 +75,15 @@ class User extends React.Component {
                 this.handleFileSearch(this.state.filesPage);
             }
         });
+    }
+
+    handleDelete(fileId) {
+        this.deleteFile(fileId, (err, res) => {
+            if (err) console.error(err);
+            else {
+                this.handleFileSearch(1);
+            }
+        })
     }
 
     handleFileSearch(page) {
@@ -165,11 +177,20 @@ class User extends React.Component {
                 {(this.state.searchedFiles || []).map(file => {
                     return (
                         <div key={file._id}
-                            className="file-meta-data"
+                            className="file-display-box"
                             onClick={() => this.props.navigate(".." + process.env.REACT_APP_FILE_PAGE + "/" + file._id)}
                             >
-                            <p>{file.filename}</p>
-                            <p>{file.privacy}</p>
+                            <div className="file-metadata">
+                                <div className="file-metadata-subsection">
+                                    <p className="displayname-metadata">{file.displayname}</p>
+                                    <p className="privacy-metadata">{file.privacy}</p>
+                                </div>
+                                <p className="filename-metadata">{file.filename}</p>
+                            </div>
+                            <button className="display-delete-button"
+                                onClick={() => this.handleDelete(file._id)}>
+                                X
+                            </button>
                         </div>
                     )
                 })}

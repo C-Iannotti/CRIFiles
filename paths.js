@@ -162,7 +162,7 @@ function main(app, database) {
                 fileCollection.insertOne({
                         _id: stream.id,
                         user: req.user._id,
-                        displyname: req.user.displayname,
+                        displayname: req.user.displayname,
                         filename: req.file.originalname,
                         privacy: req.body.privacy,
                         trustedUsers: JSON.parse(req.body.trustedUsers),
@@ -197,7 +197,6 @@ function main(app, database) {
     app.post(process.env.USER_FILES_PATH + "/:pageNum",
         (req, res) => {
             let searchObject = {}
-            console.log(req.body)
             if (req.body.file) {
                 try {
                     searchObject["_id"] = MongoDB.ObjectId(req.body.file);
@@ -229,8 +228,6 @@ function main(app, database) {
                     }
                 }
             }
-
-            console.log(searchObject)
 
             if (req.body.getUserFiles) {
                 fileCollection.count(Object.assign({}, {

@@ -169,7 +169,7 @@
     align-items: center;
 }
 
-.file-meta-data {
+.file-display-box {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -180,16 +180,56 @@
     cursor: pointer;
 }
 
+.file-metadata {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    height: 100%;
+    width: 80%;
+}
+
+.file-metadata-subsection {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: flex-start;
+    width: 100%;
+    height: 50%;
+}
+
+.displayname-metadata {
+    font-size: 0.8rem;
+    color:rgb(32, 144, 213);
+    margin-right: 20px;
+}
+
 .filename-metadata {
+    width: 100%;
     font-size: 1rem;
+    margin: 0px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    height: 50%;
 }
 
 .privacy-metadata {
     font-size: 0.6rem;
-    color:rgb(255, 96, 96)
+    color:rgb(255, 96, 96);
 }
 
 .clear-button {
+    position: relative;
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    color: rgb(215, 51, 51);
+    display: inline-block;
+}
+
+.display-delete-button {
     position: relative;
     background: none;
     border: none;

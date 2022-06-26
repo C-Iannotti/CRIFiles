@@ -102,11 +102,16 @@ class Home extends React.Component {
                 {(this.state.searchedFiles || []).map(file => {
                     return (
                         <div key={file._id}
-                            className="file-meta-data"
+                            className="file-display-box"
                             onClick={() => this.props.navigate(".." + process.env.REACT_APP_FILE_PAGE + "/" + file._id)}
                             >
-                            <p className="filename-metadata">{file.filename}</p>
-                            <p className="privacy-metadata">{file.privacy}</p>
+                            <div className="file-metadata">
+                                <div className="file-metadata-subsection">
+                                    <p className="displayname-metadata">{file.displayname}</p>
+                                    <p className="privacy-metadata">{file.privacy}</p>
+                                </div>
+                                <p className="filename-metadata">{file.filename}</p>
+                            </div>
                         </div>
                     )
                 })}

@@ -49,7 +49,6 @@ class File extends React.Component {
     checkFile() {
         this.getFileMetadata(this.props.params.fileId, this.props.params.token, (err, res) => {
             if (err || !res.data.isAccessible) {
-                console.log(res)
                 this.props.useDatabase(db => {
                     let request = db.transaction([DB_STORE_NAME], "readwrite")
                                     .objectStore(DB_STORE_NAME)
