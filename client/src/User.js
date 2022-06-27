@@ -157,7 +157,7 @@ class User extends React.Component {
                             id="previous-page-button"
                             className="page-button"
                             onClick={() => { this.handleFileSearch(this.state.filesPage-1) }}
-                            >Previous</button>
+                            >&#706;</button>
                     <input type="text"
                             id="page-number-input"
                             className="page-number-input"
@@ -172,13 +172,15 @@ class User extends React.Component {
                             id="next-page-button"
                             className="page-button"
                             onClick={() => { this.handleFileSearch(this.state.filesPage+1) }}
-                            >Next</button>
+                            >&#707;</button>
                 </div>
                 {(this.state.searchedFiles || []).map(file => {
                     return (
                         <div key={file._id}
                             className="file-display-box"
-                            onClick={() => this.props.navigate(".." + process.env.REACT_APP_FILE_PAGE + "/" + file._id)}
+                            onClick={(e) => {!e.target.matches(".display-delete-button") && this.props.navigate(".." + process.env.REACT_APP_FILE_PAGE + "/" + file._id);
+                                }
+                            }
                             >
                             <div className="file-metadata">
                                 <div className="file-metadata-subsection">
@@ -218,16 +220,18 @@ class User extends React.Component {
                 />
                 <div className="users-display">
                     <div className="searched-users-display">
-                        <button type="button"
-                                id="previous-searched-users-button"
-                                className="page-button"
-                                onClick={() => this.handleUserSearch(this.state.usersInput, this.state.searchedUsersPage-1)}
-                                >Previous</button>
-                        <button type="button"
-                                id="next-searched-users-button"
-                                className="page-button"
-                                onClick={() => this.handleUserSearch(this.state.usersInput, this.state.searchedUsersPage+1)}
-                                >Next</button>
+                        <div className="user-display-buttons">
+                            <button type="button"
+                                    id="previous-searched-users-button"
+                                    className="page-button"
+                                    onClick={() => this.handleUserSearch(this.state.usersInput, this.state.searchedUsersPage-1)}
+                                    >&#706;</button>
+                            <button type="button"
+                                    id="next-searched-users-button"
+                                    className="page-button"
+                                    onClick={() => this.handleUserSearch(this.state.usersInput, this.state.searchedUsersPage+1)}
+                                    >&#707;</button>
+                        </div>
                         {(this.state.searchedUsers || []).map(user => {
                             return (
                                 <div key={user._id + "_searched"} className="user-item-display" onClick={() => {
@@ -243,32 +247,34 @@ class User extends React.Component {
                         })}
                     </div>
                     <div className="trusted-users-display">
-                    <button type="button"
-                                id="previous-trusted-users-button"
-                                className="page-button"
-                                onClick={() => {
-                                        document.getElementById("previous-trusted-users-button").setAttribute("disabled", "true")
-                                        document.getElementById("next-trusted-users-button").setAttribute("disabled", "true")
-                                        this.getTrustedUsersPage(this.state.trustedUsersPage-1, () => {
-                                            document.getElementById("previous-trusted-users-button").removeAttribute("disabled")
-                                            document.getElementById("next-trusted-users-button").removeAttribute("disabled")
-                                        })
+                        <div className="user-display-buttons">
+                            <button type="button"
+                                    id="previous-trusted-users-button"
+                                    className="page-button"
+                                    onClick={() => {
+                                            document.getElementById("previous-trusted-users-button").setAttribute("disabled", "true")
+                                            document.getElementById("next-trusted-users-button").setAttribute("disabled", "true")
+                                            this.getTrustedUsersPage(this.state.trustedUsersPage-1, () => {
+                                                document.getElementById("previous-trusted-users-button").removeAttribute("disabled")
+                                                document.getElementById("next-trusted-users-button").removeAttribute("disabled")
+                                            })
+                                        }
                                     }
-                                }
-                                >Previous</button>
-                        <button type="button"
-                                id="next-trusted-users-button"
-                                className="page-button"
-                                onClick={() => {
-                                    document.getElementById("previous-trusted-users-button").setAttribute("disabled", "true")
-                                    document.getElementById("next-trusted-users-button").setAttribute("disabled", "true")
-                                    this.getTrustedUsersPage(this.state.trustedUsersPage+1, () => {
-                                        document.getElementById("previous-trusted-users-button").removeAttribute("disabled")
-                                        document.getElementById("next-trusted-users-button").removeAttribute("disabled")
-                                    })
-                                }
-                            }
-                                >Next</button>
+                                    >&#706;</button>
+                            <button type="button"
+                                    id="next-trusted-users-button"
+                                    className="page-button"
+                                    onClick={() => {
+                                            document.getElementById("previous-trusted-users-button").setAttribute("disabled", "true")
+                                            document.getElementById("next-trusted-users-button").setAttribute("disabled", "true")
+                                            this.getTrustedUsersPage(this.state.trustedUsersPage+1, () => {
+                                                document.getElementById("previous-trusted-users-button").removeAttribute("disabled")
+                                                document.getElementById("next-trusted-users-button").removeAttribute("disabled")
+                                            })
+                                        }
+                                    }
+                                    >&#707;</button>
+                        </div>
                         {Object.values(this.state.trustedUsersView || {}).map(user => {
                             return (
                                 <div key={user._id + "_trusted"} className="user-item-display" onClick={() => {

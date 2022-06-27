@@ -82,7 +82,7 @@ class Home extends React.Component {
                             id="previous-page-button"
                             className="page-button"
                             onClick={() => { this.handleFileSearch(this.state.filesPage-1) }}
-                            >Previous</button>
+                            >&#706;</button>
                     <input type="text"
                             id="page-number-input"
                             className="page-number-input"
@@ -97,7 +97,7 @@ class Home extends React.Component {
                             id="next-page-button"
                             className="page-button"
                             onClick={() => { this.handleFileSearch(this.state.filesPage+1) }}
-                            >Next</button>
+                            >&#707;</button>
                 </div>
                 {(this.state.searchedFiles || []).map(file => {
                     return (

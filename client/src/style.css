@@ -239,6 +239,23 @@
     display: inline-block;
 }
 
+.page-button {
+    position: relative;
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    color: rgb(82, 145, 241);
+    display: inline-block;
+}
+
+.user-display-buttons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+}
+
 .page-number-max {
     margin: 5px;
 }
