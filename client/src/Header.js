@@ -57,7 +57,7 @@ class Header extends React.Component {
         let displayname = document.getElementById("displayname").value;
 
         this.registerUser(username, password, displayname, (err, res) => {
-            if (err) this.setState({ errorMessage: res.data.errorMessage });
+            if (err) this.setState({ errorMessage: res.data.errorMessage || "Server error"});
             else {
                 this.props.navigate(process.env.REACT_APP_USER_PAGE);
                 if (!$("#login-dropdown").hasClass("login-dropdown-display")) {
@@ -81,8 +81,8 @@ class Header extends React.Component {
         let username = document.getElementById("username").value;
         let password = document.getElementById("password").value;
 
-        this.loginUser(username, password, (err) => {
-            if (err) this.setState({ errorMessage: "Invalid username/password" });
+        this.loginUser(username, password, (err, res) => {
+            if (err) this.setState({ errorMessage: res.data.errorMessage || "Server error" });
             else {
                 this.props.navigate(process.env.REACT_APP_USER_PAGE);
                 if (!$("#login-dropdown").hasClass("login-dropdown-display")) {

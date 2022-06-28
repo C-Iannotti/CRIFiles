@@ -33,6 +33,7 @@ class File extends React.Component {
         this.getTrustedUsersPage = getTrustedUsersPage.bind(this);
         this.retrieveFile = retrieveFile.bind(this);
         this.updateFile = updateFile.bind(this);
+        this.toggleTrustedUsersHTML = this.toggleTrustedUsersHTML.bind(this);
         this.handleTrustedUserDisplay = this.handleTrustedUserDisplay.bind(this);
         this.handleUserSearch = this.handleUserSearch.bind(this);
         this.displayFile = this.displayFile.bind(this);
@@ -45,6 +46,11 @@ class File extends React.Component {
 
     componentDidMount() {
         this.checkFile();
+        window.addEventListener("click", this.toggleTrustedUsersHTML);
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener("click", this.toggleTrustedUsersHTML);
     }
 
     checkFile() {
@@ -132,6 +138,18 @@ class File extends React.Component {
         })
     }
 
+    toggleTrustedUsersHTML(e) {
+        if (!e.target.matches(".file-metadata-subsection") && (
+            e.target.matches(".trusted-users-input") || 
+            e.target.matches(".user-item-display") ||
+            document.getElementById("users-display-container").contains(e.target))) {
+            this.setState({ toggleTrustedUsers: true});
+        }
+        else {
+            this.setState({ toggleTrustedUsers: false});
+        }
+    }
+
     downloadFile(blob) {
         let a = $("<a style='display: none;'/>");
         let url = window.URL.createObjectURL(blob);
@@ -191,12 +209,13 @@ class File extends React.Component {
                        id="trusted-users-input"
                        className="trusted-users-input"
                        name="trustedUsers"
-                       value={this.state.usersInput}
+                       value={this.state.toggleTrustedUsers ? this.state.usersInput : `Trusted Users (${Object.keys(this.state.trustedUsers || {}).length} of ${process.env.REACT_APP_MAX_TRUSTED_USERS})`}
                        onChange={e => this.handleUserSearch(e.target.value, 1)}
                        maxLength="20"
                 />
-                <div className="users-display">
-                    <div className="searched-users-display">
+                <div className={this.state.toggleTrustedUsers ? "users-display-container" : "users-display-container-none"}
+                    id="users-display-container">
+                    <div className="users-display-controls">
                         <div className="user-display-buttons">
                             <button type="button"
                                     id="previous-searched-users-button"
@@ -208,22 +227,7 @@ class File extends React.Component {
                                     className="page-button"
                                     onClick={() => this.handleUserSearch(this.state.usersInput, this.state.searchedUsersPage+1)}
                                     >&#707;</button>
-
                         </div>
-                        {(this.state.searchedUsers || []).map(user => {
-                            return (
-                                <div key={user._id + "_searched"} className="user-item-display" onClick={() => {
-                                    let trustedUsers = this.state.trustedUsers;
-                                    trustedUsers[user._id] = user;
-                                    this.setState({ trustedUsers: trustedUsers });
-                                    this.handleTrustedUserDisplay(this.state.trustedUsersPage);
-                                }}>
-                                    {user.displayname + ": " + user._id}
-                                </div>
-                            )
-                        })}
-                    </div>
-                    <div className="trusted-users-display">
                         <div className="user-display-buttons">
                             <button type="button"
                                     id="previous-trusted-users-button"
@@ -236,18 +240,40 @@ class File extends React.Component {
                                     onClick={() => this.handleTrustedUserDisplay(this.state.trustedUsersPage+1)}
                                     >&#707;</button>
                         </div>
-                        {Object.values(this.state.trustedUsersView || {}).map(user => {
-                            return (
-                                <div key={user._id + "_trusted"} className="user-item-display" onClick={() => {
-                                    let trustedUsers = this.state.trustedUsers;
-                                    delete trustedUsers[user._id];
-                                    this.setState({ trustedUsers: trustedUsers });
-                                    this.handleTrustedUserDisplay(this.state.trustedUsersPage);
-                                }}>
-                                    {user.displayname + ": " + user._id}
-                                </div>
-                            )
-                        })}
+                    </div>
+                    <div className="users-display">
+                        <div className="searched-users-display">
+                            {(this.state.searchedUsers || []).map(user => {
+                                return (
+                                    <div key={user._id + "_searched"} className="user-item-display" onClick={() => {
+                                        if (Object.keys(this.state.trustedUsers || {}).length < Number(process.env.REACT_APP_MAX_TRUSTED_USERS)) {
+                                            let trustedUsers = this.state.trustedUsers || {};
+                                            trustedUsers[user._id] = user;
+                                            this.setState({ trustedUsers: trustedUsers }, () => {
+                                                this.handleTrustedUserDisplay(this.state.trustedUsersPage);
+                                            });
+                                        }
+                                    }}>
+                                        {user.displayname + ": " + user._id}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                        <div className="trusted-users-display">
+                            {Object.values(this.state.trustedUsersView || {}).map(user => {
+                                return (
+                                    <div key={user._id + "_trusted"} className="user-item-display" onClick={() => {
+                                        let trustedUsers = this.state.trustedUsers;
+                                        delete trustedUsers[user._id];
+                                        this.setState({ trustedUsers: trustedUsers }, () => {
+                                            this.handleTrustedUserDisplay(this.state.trustedUsersPage);
+                                        });
+                                    }}>
+                                        {user.displayname + ": " + user._id}
+                                    </div>
+                                )
+                            })}
+                        </div>
                     </div>
                 </div>
                 <input type="text" id="comment-input" className="comment-input" defaultValue={this.state.comment} maxLength="500" />
