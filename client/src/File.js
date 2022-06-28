@@ -33,6 +33,7 @@ class File extends React.Component {
         this.getTrustedUsersPage = getTrustedUsersPage.bind(this);
         this.retrieveFile = retrieveFile.bind(this);
         this.updateFile = updateFile.bind(this);
+        this.handleTrustedUserDisplay = this.handleTrustedUserDisplay.bind(this);
         this.handleUserSearch = this.handleUserSearch.bind(this);
         this.displayFile = this.displayFile.bind(this);
         this.downloadFile = this.downloadFile.bind(this);
@@ -71,7 +72,7 @@ class File extends React.Component {
                         };
                     });
                 }
-                this.getTrustedUsersPage(1);
+                this.handleTrustedUserDisplay();
             }
         })
     }
@@ -89,7 +90,7 @@ class File extends React.Component {
                         this.props.navigate(-1);
                     }
                     else {
-                        this.getTrustedUsersPage(this.state.trustedUsersPage);
+                        this.handleTrustedUserDisplay(this.state.trustedUsersPage);
                     }
                 });
             }
@@ -119,6 +120,16 @@ class File extends React.Component {
                 document.getElementById("next-searched-users-button").removeAttribute("disabled");
             }
         });
+    }
+
+    handleTrustedUserDisplay(page) {
+        page = page || 1;
+        document.getElementById("previous-trusted-users-button").setAttribute("disabled", "true")
+        document.getElementById("next-trusted-users-button").setAttribute("disabled", "true")
+        this.getTrustedUsersPage(page, () => {
+            document.getElementById("previous-trusted-users-button").removeAttribute("disabled")
+            document.getElementById("next-trusted-users-button").removeAttribute("disabled")
+        })
     }
 
     downloadFile(blob) {
@@ -205,7 +216,7 @@ class File extends React.Component {
                                     let trustedUsers = this.state.trustedUsers;
                                     trustedUsers[user._id] = user;
                                     this.setState({ trustedUsers: trustedUsers });
-                                    this.getTrustedUsersPage(this.state.trustedUsersPage || 1);
+                                    this.handleTrustedUserDisplay(this.state.trustedUsersPage);
                                 }}>
                                     {user.displayname + ": " + user._id}
                                 </div>
@@ -217,28 +228,12 @@ class File extends React.Component {
                             <button type="button"
                                     id="previous-trusted-users-button"
                                     className="page-button"
-                                    onClick={() => {
-                                            document.getElementById("previous-trusted-users-button").setAttribute("disabled", "true")
-                                            document.getElementById("next-trusted-users-button").setAttribute("disabled", "true")
-                                            this.getTrustedUsersPage(this.state.trustedUsersPage-1, () => {
-                                                document.getElementById("previous-trusted-users-button").removeAttribute("disabled")
-                                                document.getElementById("next-trusted-users-button").removeAttribute("disabled")
-                                            })
-                                        }
-                                    }
+                                    onClick={() => this.handleTrustedUserDisplay(this.state.trustedUsersPage-1)}
                                     >&#706;</button>
                             <button type="button"
                                     id="next-trusted-users-button"
                                     className="page-button"
-                                    onClick={() => {
-                                            document.getElementById("previous-trusted-users-button").setAttribute("disabled", "true")
-                                            document.getElementById("next-trusted-users-button").setAttribute("disabled", "true")
-                                            this.getTrustedUsersPage(this.state.trustedUsersPage+1, () => {
-                                                document.getElementById("previous-trusted-users-button").removeAttribute("disabled")
-                                                document.getElementById("next-trusted-users-button").removeAttribute("disabled")
-                                            })
-                                        }
-                                    }
+                                    onClick={() => this.handleTrustedUserDisplay(this.state.trustedUsersPage+1)}
                                     >&#707;</button>
                         </div>
                         {Object.values(this.state.trustedUsersView || {}).map(user => {
@@ -247,7 +242,7 @@ class File extends React.Component {
                                     let trustedUsers = this.state.trustedUsers;
                                     delete trustedUsers[user._id];
                                     this.setState({ trustedUsers: trustedUsers });
-                                    this.getTrustedUsersPage(this.state.trustedUsersPage || 1);
+                                    this.handleTrustedUserDisplay(this.state.trustedUsersPage);
                                 }}>
                                     {user.displayname + ": " + user._id}
                                 </div>
@@ -259,7 +254,7 @@ class File extends React.Component {
                 <input type="reset" id="metadata-reset-button" className="metadata-reset-button" value="Reset" onClick={() => this.getFileMetadata(this.props.params.fileId, undefined, (err, res) => {
                     if (err) console.error(err);
                     else {
-                        this.getTrustedUsersPage(this.state.trustedUsersPage)
+                        this.handleTrustedUserDisplay(this.state.trustedUsersPage)
                     }
                 })}/>
                 <button type="button" id="metadata-update-button" className="metadata-update-button" onClick={this.updateFileMetadata}>Update</button>
@@ -288,7 +283,7 @@ class File extends React.Component {
                                 this.getFileMetadata(this.props.params.fileId, this.props.params.token, err => {
                                     if (err) console.error(err);
                                     else {
-                                        this.getTrustedUsersPage(this.state.trustedUsersPage);
+                                        this.handleTrustedUserDisplay(this.state.trustedUsersPage);
                                     }
                                 })
                             }
