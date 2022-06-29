@@ -34,6 +34,7 @@
 
 .file-upload-form {
     display: flex;
+    position: relative;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
@@ -123,7 +124,7 @@
     display: block;
     position: absolute;
     right: 0;
-    box-shadow: 1px 1px 3px;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 }
 
 .login-dropdown-display {
@@ -146,7 +147,20 @@
     text-decoration: underline;
 }
 
+.users-display-container {
+    position: absolute;
+    display: inline-block;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
 .users-display-container-none {
+    display: none;
+}
+
+.hidden-file-input {
+    width: 500px;
+    height: 200px;
+    border: 1px solid black;
     display: none;
 }
 

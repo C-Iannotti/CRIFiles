@@ -69,7 +69,7 @@ class User extends React.Component {
     }
 
     handleUpload() {
-        let file = document.getElementById("file-input").files[0];
+        let file = this.props.useRef.current.files[0];
         let comment = document.getElementById("comment-input").value;
         let privacy = document.getElementById("privacy-input").value;
 
@@ -231,9 +231,23 @@ class User extends React.Component {
 
     getFileUploadFormHTML() {
         return (
-            <form id="file-upload-form" className="file-upload-form">
-                <label htmlFor="file-upload">Select a file:</label>
-                <input type="file" id="file-input" className="file-input" name="userFile" />
+            <div id="file-upload-form" className="file-upload-form">
+                <input type="file"
+                    id="hidden-file-input"
+                    className="hidden-file-input"
+                    name="userFile"
+                    ref={this.props.useRef}
+                    onChange={e => {
+                        this.setState({currentFilename: e.target.files[0].name})
+                    }}
+                    />
+                <div id="file-input-container">
+                    <button id="file-input-selection"
+                        type="button"
+                        onClick={() => this.props.useRef.current.click()}
+                        >Select a file</button>
+                    {this.state.currentFilename}
+                </div>
                 <select id="privacy-input" className="privacy-input" name="privacy" defaultValue="private">
                     <option value="private">Private</option>
                     <option value="shared">Shared</option>
@@ -313,7 +327,7 @@ class User extends React.Component {
                 <input type="text" id="comment-input" className="comment-input" name="comment" defaultValue="" maxLength="500" />
                 <input type="reset" id="file-reset-button" className="file-reset-button" value="Reset" onClick={() => this.setState({trustedUsers: {}, trustedUsersView: []})}/>
                 <button type="button" id="file-upload-button" className="file-upload-button" onClick={this.handleUpload}>Submit</button>
-            </form>
+            </div>
         );
     }
 
