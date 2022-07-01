@@ -258,7 +258,7 @@ class User extends React.Component {
                         onClick={() => this.props.useRef.current.click()}
                         readOnly
                         />
-                    <select id="privacy-input" className="privacy-input" name="privacy" defaultValue="private">
+                    <select id="privacy-input" className="privacy-input-user" name="privacy" defaultValue="private">
                         <option value="private">Private</option>
                         <option value="shared">Shared</option>
                         <option value="public">Public</option>
