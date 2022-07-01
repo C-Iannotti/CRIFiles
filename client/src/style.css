@@ -34,10 +34,13 @@
 
 .file-upload-form {
     display: flex;
-    position: relative;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
+}
+
+.users-display-container-parent {
+    position: relative;
 }
 
 .metadata-update-form {
@@ -70,13 +73,15 @@
 }
 
 .users-display {
+    width: 100%;
+    height: 87%;
     display: flex;
     flex-direction: row;
+    position: relative;
 }
 
 .trusted-users-display {
-    height: 100px;
-    width: 200px;
+    width: 100%;
     overflow: auto;
     word-break: normal;
     word-wrap: normal;
@@ -85,8 +90,7 @@
 }
 
 .searched-users-display {
-    height: 100px;
-    width: 200px;
+    width: 100%;
     overflow: auto;
     word-break: normal;
     word-wrap: normal;
@@ -147,21 +151,60 @@
     text-decoration: underline;
 }
 
+.trusted-users-input {
+    width: 275px;
+    margin-bottom: 10px;
+}
+
+.comment-input {
+    width: 275px;
+    height: 100px;
+    margin-bottom: 10px;
+    resize: none;
+}
+
 .users-display-container {
     position: absolute;
     display: inline-block;
+    width: 400px;
+    height: 210px;
+    margin-left: -200px;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    z-index: 1;
 }
 
 .users-display-container-none {
     display: none;
 }
 
+.file-upload-form-buttons {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
 .hidden-file-input {
-    width: 500px;
-    height: 200px;
-    border: 1px solid black;
+    position: absolute;
     display: none;
+}
+
+.file-input-container {
+    padding-bottom: 10px;
+}
+
+.filename-display {
+    width: 200px;
+    height: 25px;
+    cursor: pointer;
+}
+
+.privacy-input {
+    width: 75px;
+    max-width: 100px;
+    height: 30px;
 }
 
 .home-button {

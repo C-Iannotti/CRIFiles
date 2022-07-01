@@ -18,7 +18,8 @@ class User extends React.Component {
             filesInput: 1,
             usersInput: "",
             fileInput: "",
-            idInput: ""
+            idInput: "",
+            commentInput: ""
         };
 
         this.getFilePage = getFilePage.bind(this);
@@ -69,19 +70,24 @@ class User extends React.Component {
     }
 
     handleUpload() {
-        let file = this.props.useRef.current.files[0];
-        let comment = document.getElementById("comment-input").value;
-        let privacy = document.getElementById("privacy-input").value;
+        if (this.props.useRef.current.files[0]) {
+            let file = this.props.useRef.current.files[0];
+            let comment = document.getElementById("comment-input").value;
+            let privacy = document.getElementById("privacy-input").value;
 
-        this.uploadFile(file, privacy, this.state.trustedUsers || {}, comment, (err, res) => {
-            if (err) console.error(err);
-            else {
-                this.setState({
-                    trustedUsers: {}
-                });
-                this.handleFileSearch(this.state.filesPage);
-            }
-        });
+            this.uploadFile(file, privacy, this.state.trustedUsers || {}, comment, (err, res) => {
+                if (err) console.error(err);
+                else {
+                    this.setState({
+                        trustedUsers: {}
+                    });
+                    this.handleFileSearch(this.state.filesPage);
+                }
+            });
+        }
+        else {
+            this.props.useRef.current.click();
+        }
     }
 
     handleDelete(fileId) {
@@ -145,10 +151,11 @@ class User extends React.Component {
     }
 
     toggleTrustedUsersHTML(e) {
-        if (!e.target.matches(".file-metadata-subsection") && (
-            e.target.matches(".trusted-users-input") || 
+        if (e.target.matches(".trusted-users-input") || 
             e.target.matches(".user-item-display") ||
-            document.getElementById("users-display-container").contains(e.target))) {
+            (document.getElementById("users-display-container") &&
+            document.getElementById("users-display-container").contains(e.target))
+            ) {
             this.setState({ toggleTrustedUsers: true});
         }
         else {
@@ -231,7 +238,7 @@ class User extends React.Component {
 
     getFileUploadFormHTML() {
         return (
-            <div id="file-upload-form" className="file-upload-form">
+            <form id="file-upload-form" className="file-upload-form">
                 <input type="file"
                     id="hidden-file-input"
                     className="hidden-file-input"
@@ -241,18 +248,22 @@ class User extends React.Component {
                         this.setState({currentFilename: e.target.files[0].name})
                     }}
                     />
-                <div id="file-input-container">
-                    <button id="file-input-selection"
-                        type="button"
+                <div id="file-input-container"
+                    className="file-input-container">
+                    <input type="text"
+                        id="filename-display"
+                        className="filename-display"
+                        placeholder="Click to select a file"
+                        value={this.state.currentFilename || "Click to select a file"}
                         onClick={() => this.props.useRef.current.click()}
-                        >Select a file</button>
-                    {this.state.currentFilename}
+                        readOnly
+                        />
+                    <select id="privacy-input" className="privacy-input" name="privacy" defaultValue="private">
+                        <option value="private">Private</option>
+                        <option value="shared">Shared</option>
+                        <option value="public">Public</option>
+                    </select>
                 </div>
-                <select id="privacy-input" className="privacy-input" name="privacy" defaultValue="private">
-                    <option value="private">Private</option>
-                    <option value="shared">Shared</option>
-                    <option value="public">Public</option>
-                </select>
                 <input type="text"
                        id="trusted-users-input"
                        className="trusted-users-input"
@@ -261,73 +272,91 @@ class User extends React.Component {
                        onChange={e => {this.handleUserSearch(e.target.value, 1)}}
                        maxLength="20"
                 />
-                <div className={this.state.toggleTrustedUsers ? "users-display-container" : "users-display-container-none"}
-                    id="users-display-container">
-                    <div className="users-display-controls">
-                        <div className="user-display-buttons">
-                            <button type="button"
-                                    id="previous-searched-users-button"
-                                    className="page-button"
-                                    onClick={() => this.handleUserSearch(this.state.usersInput, this.state.searchedUsersPage-1)}
-                                    >&#706;</button>
-                            <button type="button"
-                                    id="next-searched-users-button"
-                                    className="page-button"
-                                    onClick={() => this.handleUserSearch(this.state.usersInput, this.state.searchedUsersPage+1)}
-                                    >&#707;</button>
+                <div className="users-display-container-parent">
+                    <div className={this.state.toggleTrustedUsers ? "users-display-container" : "users-display-container-none"}
+                        id="users-display-container">
+                        <div className="users-display-controls">
+                            <div className="user-display-buttons">
+                                <button type="button"
+                                        id="previous-searched-users-button"
+                                        className="page-button"
+                                        onClick={() => this.handleUserSearch(this.state.usersInput, this.state.searchedUsersPage-1)}
+                                        >&#706;</button>
+                                <button type="button"
+                                        id="next-searched-users-button"
+                                        className="page-button"
+                                        onClick={() => this.handleUserSearch(this.state.usersInput, this.state.searchedUsersPage+1)}
+                                        >&#707;</button>
+                            </div>
+                            <div className="user-display-buttons">
+                                <button type="button"
+                                        id="previous-trusted-users-button"
+                                        className="page-button"
+                                        onClick={() => this.handleTrustedUserDisplay(this.state.trustedUsersPage-1)}
+                                        >&#706;</button>
+                                <button type="button"
+                                        id="next-trusted-users-button"
+                                        className="page-button"
+                                        onClick={() => this.handleTrustedUserDisplay(this.state.trustedUsersPage+1)}
+                                        >&#707;</button>
+                            </div>
                         </div>
-                        <div className="user-display-buttons">
-                            <button type="button"
-                                    id="previous-trusted-users-button"
-                                    className="page-button"
-                                    onClick={() => this.handleTrustedUserDisplay(this.state.trustedUsersPage-1)}
-                                    >&#706;</button>
-                            <button type="button"
-                                    id="next-trusted-users-button"
-                                    className="page-button"
-                                    onClick={() => this.handleTrustedUserDisplay(this.state.trustedUsersPage+1)}
-                                    >&#707;</button>
-                        </div>
-                    </div>
-                    <div className="users-display">
-                        <div className="searched-users-display">
-                            {(this.state.searchedUsers || []).map(user => {
-                                return (
-                                    <div key={user._id + "_searched"} className="user-item-display" onClick={() => {
-                                        if (Object.keys(this.state.trustedUsers || {}).length < Number(process.env.REACT_APP_MAX_TRUSTED_USERS)) {
-                                            let trustedUsers = this.state.trustedUsers || {};
-                                            trustedUsers[user._id] = user;
+                        <div className="users-display">
+                            <div className="searched-users-display">
+                                {(this.state.searchedUsers || []).map(user => {
+                                    return (
+                                        <div key={user._id + "_searched"} className="user-item-display" onClick={() => {
+                                            if (Object.keys(this.state.trustedUsers || {}).length < Number(process.env.REACT_APP_MAX_TRUSTED_USERS)) {
+                                                let trustedUsers = this.state.trustedUsers || {};
+                                                trustedUsers[user._id] = user;
+                                                this.setState({ trustedUsers: trustedUsers }, () => {
+                                                    this.handleTrustedUserDisplay(this.state.trustedUsersPage);
+                                                });
+                                            }
+                                        }}>
+                                            {user.displayname + ": " + user._id}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                            <div className="trusted-users-display">
+                                {Object.values(this.state.trustedUsersView || {}).map(user => {
+                                    return (
+                                        <div key={user._id + "_trusted"} className="user-item-display" onClick={() => {
+                                            let trustedUsers = this.state.trustedUsers;
+                                            delete trustedUsers[user._id];
                                             this.setState({ trustedUsers: trustedUsers }, () => {
                                                 this.handleTrustedUserDisplay(this.state.trustedUsersPage);
                                             });
-                                        }
-                                    }}>
-                                        {user.displayname + ": " + user._id}
-                                    </div>
-                                )
-                            })}
-                        </div>
-                        <div className="trusted-users-display">
-                            {Object.values(this.state.trustedUsersView || {}).map(user => {
-                                return (
-                                    <div key={user._id + "_trusted"} className="user-item-display" onClick={() => {
-                                        let trustedUsers = this.state.trustedUsers;
-                                        delete trustedUsers[user._id];
-                                        this.setState({ trustedUsers: trustedUsers }, () => {
-                                            this.handleTrustedUserDisplay(this.state.trustedUsersPage);
-                                        });
-                                    }}>
-                                        {user.displayname + ": " + user._id}
-                                    </div>
-                                )
-                            })}
+                                        }}>
+                                            {user.displayname + ": " + user._id}
+                                        </div>
+                                    )
+                                })}
+                            </div>
                         </div>
                     </div>
                 </div>
-                <input type="text" id="comment-input" className="comment-input" name="comment" defaultValue="" maxLength="500" />
-                <input type="reset" id="file-reset-button" className="file-reset-button" value="Reset" onClick={() => this.setState({trustedUsers: {}, trustedUsersView: []})}/>
-                <button type="button" id="file-upload-button" className="file-upload-button" onClick={this.handleUpload}>Submit</button>
-            </div>
+                <textarea type="text"
+                    id="comment-input"
+                    className="comment-input"
+                    name="comment"
+                    maxLength="500"
+                    value={this.state.commentInput}
+                    onChange={e => this.setState({ commentInput: e.target.value })}
+                    ></textarea>
+                <div className="file-upload-form-buttons">
+                    <button type="reset" 
+                        id="file-reset-button" 
+                        className="file-reset-button"
+                        onClick={() => this.setState({trustedUsers: {}, trustedUsersView: [], currentFilename: undefined, commentInput: ""})}
+                        >Reset</button>
+                    <button type="button" 
+                        id="file-upload-button" 
+                        className="file-upload-button" 
+                        onClick={this.handleUpload}>Submit</button>
+                </div>
+            </form>
         );
     }
 
