@@ -33,7 +33,8 @@ class File extends React.Component {
         this.getTrustedUsersPage = getTrustedUsersPage.bind(this);
         this.retrieveFile = retrieveFile.bind(this);
         this.updateFile = updateFile.bind(this);
-        this.toggleTrustedUsersHTML = this.toggleTrustedUsersHTML.bind(this);
+        this.getFileContainerHTML = this.getFileContainerHTML.bind(this);
+        this.toggleTrustedUsersContainer = this.toggleTrustedUsersContainer.bind(this);
         this.handleTrustedUserDisplay = this.handleTrustedUserDisplay.bind(this);
         this.handleUserSearch = this.handleUserSearch.bind(this);
         this.displayFile = this.displayFile.bind(this);
@@ -45,11 +46,11 @@ class File extends React.Component {
 
     componentDidMount() {
         this.checkFile();
-        window.addEventListener("click", this.toggleTrustedUsersHTML);
+        window.addEventListener("click", this.toggleTrustedUsersContainer);
     }
 
     componentWillUnmount() {
-        window.removeEventListener("click", this.toggleTrustedUsersHTML);
+        window.removeEventListener("click", this.toggleTrustedUsersContainer);
     }
 
     checkFile() {
@@ -71,7 +72,7 @@ class File extends React.Component {
             else {
                 if (res.data.size <= process.env.REACT_APP_MAX_FILE_SIZE) {
                     this.retrieveFile(this.props.useDatabase, (err, res) => {
-                        if (err) this.setState({ errorMessage: res.data.errorMessage })
+                        if (err) this.props.addMessage(res.data.errorMessage || "Server error");
                         else {
                             this.displayFile(res)
                         };
@@ -87,11 +88,12 @@ class File extends React.Component {
         let privacy = document.getElementById("privacy-input").value;
         
         this.updateFile(this.props.params.fileId, this.state.trustedUsers || {}, comment, privacy, (err, res) => {
-            if (err) console.error(err);
+            if (err) this.props.addMessage(res.data.errorMessage || "Server error");
             else {
                 this.getFileMetadata(this.props.params.fileId, this.props.params.token, (err, res) => {
                     if (err) {
                         console.error(err);
+                        this.props.addMessage(res.data.errorMessage || "Server error");
                         this.props.navigate(-1);
                     }
                     else {
@@ -109,6 +111,7 @@ class File extends React.Component {
         this.getSearchedUsersPage(userString, page, (err, res) => {
             if (err) {
                 console.error(err);
+                if (res && res.data) this.props.addMessage(res.data.errorMessage || "Server error");
                 document.getElementById("previous-searched-users-button").removeAttribute("disabled");
                 document.getElementById("next-searched-users-button").removeAttribute("disabled");
             }
@@ -138,7 +141,7 @@ class File extends React.Component {
         })
     }
 
-    toggleTrustedUsersHTML(e) {
+    toggleTrustedUsersContainer(e) {
         if (e.target.matches(".trusted-users-input") || 
             e.target.matches(".user-item-display") ||
             (document.getElementById("users-display-container") &&
@@ -194,6 +197,178 @@ class File extends React.Component {
         }
     }
 
+    getFileContainerHTML() {
+        return (
+            <div id="file-container" className="file-container">
+                <div id="file-container-sidebar-parent" className="file-container-sidebar-parent">
+                    {this.state.isUsers &&
+                    <div id="file-container-sidebar" className="file-container-sidebar">
+                        {this.state.editFile &&
+                            <button type="button"
+                                id="cancel-button"
+                                className="cancel-button"
+                                onClick={() => {
+                                    this.setState({
+                                        editFile: false
+                                    })
+                                }}
+                                >Cancel</button>
+                        }
+                        {this.state.editFile &&
+                            <button type="button"
+                                id="metadata-update-button"
+                                className="metadata-update-button"
+                                onClick={() => {
+                                    this.updateFileMetadata()
+                                }}
+                                >Update</button>
+                        }
+                        {!this.state.editFile &&
+                            <button type="button"
+                                id="edit-button"
+                                className="edit-button"
+                                onClick={() => {
+                                    this.setState({
+                                        editFile: true,
+                                        commentInput: this.state.comment
+                                    })
+                                }}
+                                >Edit</button>
+                        }
+                    </div>}
+                </div>
+                <div className="file-container-header">
+                    <p className="fileid-display">{"File ID: " + this.props.params.fileId}</p>
+                    {this.state.editFile ?
+                        <select id="privacy-input"
+                                className="privacy-input"
+                                name="privacy"
+                                defaultValue={this.state.privacy}
+                                key={this.state.privacy + "-update-form"}>
+                            <option value="private">Private</option>
+                            <option value="shared">Shared</option>
+                            <option value="public">Public</option>
+                        </select>
+                        :
+                        <p className="privacy-display">{this.state.privacy}</p>
+                    }
+                </div>
+                {this.state.editFile && 
+                    <input type="text"
+                            id="trusted-users-input"
+                            className="trusted-users-input"
+                            name="trustedUsers"
+                            value={this.state.toggleTrustedUsers ? this.state.usersInput : `Trusted Users (${Object.keys(this.state.trustedUsers || {}).length} of ${process.env.REACT_APP_MAX_TRUSTED_USERS})`}
+                            onChange={e => this.handleUserSearch(e.target.value, 1)}
+                            maxLength="20"
+                    />}
+                <div className="users-display-container-parent">
+                    <div className={this.state.toggleTrustedUsers ? "users-display-container" : "users-display-container-none"}
+                        id="users-display-container">
+                        <div className="users-display-controls">
+                            <div className="user-display-buttons">
+                                <button type="button"
+                                        id="previous-searched-users-button"
+                                        className="page-button"
+                                        onClick={() => this.handleUserSearch(this.state.usersInput, this.state.searchedUsersPage-1)}
+                                        >&#706;</button>
+                                <button type="button"
+                                        id="next-searched-users-button"
+                                        className="page-button"
+                                        onClick={() => this.handleUserSearch(this.state.usersInput, this.state.searchedUsersPage+1)}
+                                        >&#707;</button>
+                            </div>
+                            <div className="user-display-buttons">
+                                <button type="button"
+                                        id="previous-trusted-users-button"
+                                        className="page-button"
+                                        onClick={() => this.handleTrustedUserDisplay(this.state.trustedUsersPage-1)}
+                                        >&#706;</button>
+                                <button type="button"
+                                        id="next-trusted-users-button"
+                                        className="page-button"
+                                        onClick={() => this.handleTrustedUserDisplay(this.state.trustedUsersPage+1)}
+                                        >&#707;</button>
+                            </div>
+                        </div>
+                        <div className="users-display">
+                            <div className="searched-users-display">
+                                {(this.state.searchedUsers || []).map(user => {
+                                    return (
+                                        <div key={user._id + "_searched"} className="user-item-display" onClick={() => {
+                                            if (Object.keys(this.state.trustedUsers || {}).length < Number(process.env.REACT_APP_MAX_TRUSTED_USERS)) {
+                                                let trustedUsers = this.state.trustedUsers || {};
+                                                trustedUsers[user._id] = user;
+                                                this.setState({ trustedUsers: trustedUsers }, () => {
+                                                    this.handleTrustedUserDisplay(this.state.trustedUsersPage);
+                                                });
+                                            }
+                                        }}>
+                                            {user.displayname + ": " + user._id}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                            <div className="trusted-users-display">
+                                {Object.values(this.state.trustedUsersView || {}).map(user => {
+                                    return (
+                                        <div key={user._id + "_trusted"} className="user-item-display" onClick={() => {
+                                            let trustedUsers = this.state.trustedUsers;
+                                            delete trustedUsers[user._id];
+                                            this.setState({ trustedUsers: trustedUsers }, () => {
+                                                this.handleTrustedUserDisplay(this.state.trustedUsersPage);
+                                            });
+                                        }}>
+                                            {user.displayname + ": " + user._id}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="file-display-holder">{this.state.tag}</div>
+                {this.state.editFile ?
+                    <textarea id="comment-input"
+                        className="comment-input"
+                        name="comment"
+                        maxLength="500"
+                        value={this.state.commentInput || ""}
+                        onChange={e => this.setState({ commentInput: e.target.value })}
+                        ></textarea>
+                    :
+                    <textarea id="comment-input"
+                        className="comment-input"
+                        name="comment"
+                        maxLength="500"
+                        value={this.state.comment}
+                        readOnly
+                        ></textarea>
+                }
+                <div className="file-container-buttons">
+                    <button type="button"
+                            id="download-button"
+                            className="download-button"
+                            onClick={() => this.retrieveFile(this.props.useDatabase, (err, res) => {
+                                if (err) this.props.addMessage(res.data.errorMessage || "Server error");
+                                else {
+                                    this.downloadFile();
+                                }
+                            })}>Download File</button>
+                    <button type="button" id="delete-button" className="delete-button" onClick={() => this.deleteFile(this.props.params.fileId, (err, res) => {
+                        if (err) {
+                            console.error(err);
+                            this.props.addMessage(res.data.errorMessage || "Server error");
+                        }
+                        else {
+                            this.props.navigate(-1);
+                        }
+                    })}>Delete File</button>
+                </div>
+            </div>
+        )
+    }
+
     getShareableUrlHTML() {
         return (
             <div id="shareable-url-container" className="shareable-url-container">
@@ -209,11 +384,17 @@ class File extends React.Component {
                 <button type="button"
                         id="token-update-button"
                         className="token-update-button"
-                        onClick={() => this.createNewToken(this.props.params.fileId, err => {
-                            if (err) console.error(err);
+                        onClick={() => this.createNewToken(this.props.params.fileId, (err, res) => {
+                            if (err) {
+                                console.error(err);
+                                this.props.addMessage(res.data.errorMessage || "Server error");
+                            }
                             else {
-                                this.getFileMetadata(this.props.params.fileId, this.props.params.token, err => {
-                                    if (err) console.error(err);
+                                this.getFileMetadata(this.props.params.fileId, this.props.params.token, (err, res) => {
+                                    if (err) {
+                                        console.error(err);
+                                        this.props.addMessage(res.data.errorMessage || "Server error");
+                                    }
                                     else {
                                         this.handleTrustedUserDisplay(this.state.trustedUsersPage);
                                     }
@@ -228,172 +409,7 @@ class File extends React.Component {
     render() {
         return(
             <div className="file-page">
-                <div id="file-container" className="file-container">
-                    <div id="file-container-sidebar-parent" className="file-container-sidebar-parent">
-                        {this.state.isUsers &&
-                        <div id="file-container-sidebar" className="file-container-sidebar">
-                            {this.state.editFile &&
-                                <button type="button"
-                                    id="cancel-button"
-                                    className="cancel-button"
-                                    onClick={() => {
-                                        this.setState({
-                                            editFile: false
-                                        })
-                                    }}
-                                    >Cancel</button>
-                            }
-                            {this.state.editFile &&
-                                <button type="button"
-                                    id="metadata-update-button"
-                                    className="metadata-update-button"
-                                    onClick={() => {
-                                        this.updateFileMetadata()
-                                    }}
-                                    >Update</button>
-                            }
-                            {!this.state.editFile &&
-                                <button type="button"
-                                    id="edit-button"
-                                    className="edit-button"
-                                    onClick={() => {
-                                        this.setState({
-                                            editFile: true,
-                                            commentInput: this.state.comment
-                                        })
-                                    }}
-                                    >Edit</button>
-                            }
-                        </div>}
-                    </div>
-                    <div className="file-container-header">
-                        <p className="fileid-display">{"File ID: " + this.props.params.fileId}</p>
-                        {this.state.editFile ?
-                            <select id="privacy-input"
-                                    className="privacy-input"
-                                    name="privacy"
-                                    defaultValue={this.state.privacy}
-                                    key={this.state.privacy + "-update-form"}>
-                                <option value="private">Private</option>
-                                <option value="shared">Shared</option>
-                                <option value="public">Public</option>
-                            </select>
-                            :
-                            <p className="privacy-display">{this.state.privacy}</p>
-                        }
-                    </div>
-                    {this.state.editFile && 
-                        <input type="text"
-                                id="trusted-users-input"
-                                className="trusted-users-input"
-                                name="trustedUsers"
-                                value={this.state.toggleTrustedUsers ? this.state.usersInput : `Trusted Users (${Object.keys(this.state.trustedUsers || {}).length} of ${process.env.REACT_APP_MAX_TRUSTED_USERS})`}
-                                onChange={e => this.handleUserSearch(e.target.value, 1)}
-                                maxLength="20"
-                        />}
-                    <div className="users-display-container-parent">
-                        <div className={this.state.toggleTrustedUsers ? "users-display-container" : "users-display-container-none"}
-                            id="users-display-container">
-                            <div className="users-display-controls">
-                                <div className="user-display-buttons">
-                                    <button type="button"
-                                            id="previous-searched-users-button"
-                                            className="page-button"
-                                            onClick={() => this.handleUserSearch(this.state.usersInput, this.state.searchedUsersPage-1)}
-                                            >&#706;</button>
-                                    <button type="button"
-                                            id="next-searched-users-button"
-                                            className="page-button"
-                                            onClick={() => this.handleUserSearch(this.state.usersInput, this.state.searchedUsersPage+1)}
-                                            >&#707;</button>
-                                </div>
-                                <div className="user-display-buttons">
-                                    <button type="button"
-                                            id="previous-trusted-users-button"
-                                            className="page-button"
-                                            onClick={() => this.handleTrustedUserDisplay(this.state.trustedUsersPage-1)}
-                                            >&#706;</button>
-                                    <button type="button"
-                                            id="next-trusted-users-button"
-                                            className="page-button"
-                                            onClick={() => this.handleTrustedUserDisplay(this.state.trustedUsersPage+1)}
-                                            >&#707;</button>
-                                </div>
-                            </div>
-                            <div className="users-display">
-                                <div className="searched-users-display">
-                                    {(this.state.searchedUsers || []).map(user => {
-                                        return (
-                                            <div key={user._id + "_searched"} className="user-item-display" onClick={() => {
-                                                if (Object.keys(this.state.trustedUsers || {}).length < Number(process.env.REACT_APP_MAX_TRUSTED_USERS)) {
-                                                    let trustedUsers = this.state.trustedUsers || {};
-                                                    trustedUsers[user._id] = user;
-                                                    this.setState({ trustedUsers: trustedUsers }, () => {
-                                                        this.handleTrustedUserDisplay(this.state.trustedUsersPage);
-                                                    });
-                                                }
-                                            }}>
-                                                {user.displayname + ": " + user._id}
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                                <div className="trusted-users-display">
-                                    {Object.values(this.state.trustedUsersView || {}).map(user => {
-                                        return (
-                                            <div key={user._id + "_trusted"} className="user-item-display" onClick={() => {
-                                                let trustedUsers = this.state.trustedUsers;
-                                                delete trustedUsers[user._id];
-                                                this.setState({ trustedUsers: trustedUsers }, () => {
-                                                    this.handleTrustedUserDisplay(this.state.trustedUsersPage);
-                                                });
-                                            }}>
-                                                {user.displayname + ": " + user._id}
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="file-display-holder">{this.state.tag}</div>
-                    {this.state.editFile ?
-                        <textarea id="comment-input"
-                            className="comment-input"
-                            name="comment"
-                            maxLength="500"
-                            value={this.state.commentInput || ""}
-                            onChange={e => this.setState({ commentInput: e.target.value })}
-                            ></textarea>
-                        :
-                        <textarea id="comment-input"
-                            className="comment-input"
-                            name="comment"
-                            maxLength="500"
-                            value={this.state.comment}
-                            readOnly
-                            ></textarea>
-                    }
-                    <div className="file-container-buttons">
-                        <button type="button"
-                                id="download-button"
-                                className="download-button"
-                                onClick={() => this.retrieveFile(this.props.useDatabase, (err, res) => {
-                                    if (err) this.setState({ errorMessage: res.data.errorMessage });
-                                    else {
-                                        this.downloadFile();
-                                    }
-                                })}>Download File</button>
-                        <button type="button" id="delete-button" className="delete-button" onClick={() => this.deleteFile(this.props.params.fileId, (err, res) => {
-                            if (err) console.error(err);
-                            else {
-                                this.props.navigate(-1);
-                            }
-                        })}>Delete File</button>
-                    </div>
-                </div>
-                <br />
-                {this.state.errorMessage !== null && <p id="update-form-error" className="error-message">{this.state.errorMessage}</p>}
+                {this.getFileContainerHTML()}
                 {this.state.isUsers && this.getShareableUrlHTML()}
             </div>
         )

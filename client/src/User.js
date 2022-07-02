@@ -28,7 +28,7 @@ class User extends React.Component {
         this.getTrustedUsersPage = getTrustedUsersPage.bind(this)
         this.uploadFile = uploadFile.bind(this);
         this.deleteFile = deleteFile.bind(this);
-        this.toggleTrustedUsersHTML = this.toggleTrustedUsersHTML.bind(this);
+        this.toggleTrustedUsersContainer = this.toggleTrustedUsersContainer.bind(this);
         this.handleDelete = this.handleDelete.bind(this);
         this.handleUserSearch = this.handleUserSearch.bind(this);
         this.handleTrustedUserDisplay = this.handleTrustedUserDisplay.bind(this);
@@ -44,6 +44,7 @@ class User extends React.Component {
         this.getDisplayName((err, res) => {
             if (err) {
                 console.error(err);
+                this.props.addMessage(res.data.errorMessage || "Server error");
                 this.props.navigate("/", { replace: true });
             }
             else if (res.data.displayname) {
@@ -56,11 +57,11 @@ class User extends React.Component {
                 this.props.navigate("/", { replace: true });
             }
         })
-        window.addEventListener("click", this.toggleTrustedUsersHTML);
+        window.addEventListener("click", this.toggleTrustedUsersContainer);
     }
 
     componentWillUnmount() {
-        window.removeEventListener("click", this.toggleTrustedUsersHTML);
+        window.removeEventListener("click", this.toggleTrustedUsersContainer);
     }
 
     filePageInputKeyDown(e) {
@@ -71,17 +72,22 @@ class User extends React.Component {
 
     handleUpload() {
         if (this.props.useRef.current.files[0]) {
+            this.props.addMessage("Uploading file...");
             let file = this.props.useRef.current.files[0];
             let comment = document.getElementById("comment-input").value;
             let privacy = document.getElementById("privacy-input").value;
 
             this.uploadFile(file, privacy, this.state.trustedUsers || {}, comment, (err, res) => {
-                if (err) console.error(err);
+                if (err) {
+                    console.error(err);
+                    this.props.addMessage(res.data.errorMessage || "Server error");
+                }
                 else {
                     this.setState({
                         trustedUsers: {}
                     });
                     this.handleFileSearch(this.state.filesPage);
+                    this.props.addMessage("Uploaded file!");
                 }
             });
         }
@@ -91,10 +97,15 @@ class User extends React.Component {
     }
 
     handleDelete(fileId) {
+        this.props.addMessage("Deleting file...");
         this.deleteFile(fileId, (err, res) => {
-            if (err) console.error(err);
+            if (err) {
+                console.error(err);
+                this.props.addMessage(res.data.errorMessage || "Server error");
+            }
             else {
                 this.handleFileSearch(1);
+                this.props.addMessage("Deleted file!");
             }
         })
     }
@@ -104,7 +115,10 @@ class User extends React.Component {
             file: this.state.fileInput,
             getUserFiles: true
         }, (err, res) => {
-            if (err) console.error(err);
+            if (err) {
+                console.error(err);
+                if (res && res.data) this.props.addMessage(res.data.errorMessage || "Server error");
+            }
             else if (res) {
                 this.setState({
                     searchedFiles: res.data.files,
@@ -121,6 +135,7 @@ class User extends React.Component {
         this.getSearchedUsersPage(userString, page, (err, res) => {
             if (err) {
                 console.error(err);
+                if (res && res.data) this.props.addMessage(res.data.errorMessage || "Server error");
                 document.getElementById("previous-searched-users-button").removeAttribute("disabled");
                 document.getElementById("next-searched-users-button").removeAttribute("disabled");
             }
@@ -150,7 +165,7 @@ class User extends React.Component {
         })
     }
 
-    toggleTrustedUsersHTML(e) {
+    toggleTrustedUsersContainer(e) {
         if (e.target.matches(".trusted-users-input") || 
             e.target.matches(".user-item-display") ||
             (document.getElementById("users-display-container") &&

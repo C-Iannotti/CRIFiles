@@ -27,7 +27,10 @@ class Header extends React.Component {
 
     componentDidMount() {
         this.getDisplayName((err, res) => {
-            if (err) console.error(err);
+            if (err) {
+                console.error(err);
+                this.props.addMessage(res.data.errorMessage || "Server error");
+            }
             else if (res.data.displayname) {
                 this.setState({
                     displayname: res.data.displayname,
@@ -57,19 +60,21 @@ class Header extends React.Component {
         let displayname = document.getElementById("displayname").value;
 
         this.registerUser(username, password, displayname, (err, res) => {
-            if (err) this.setState({ errorMessage: res.data.errorMessage || "Server error"});
+            if (err) this.props.addMessage(res.data.errorMessage || "Server error");
             else {
                 this.props.navigate(process.env.REACT_APP_USER_PAGE);
                 if (!$("#login-dropdown").hasClass("login-dropdown-display")) {
                     $("#login-dropdown").toggleClass('login-dropdown-display');
                 }
                 this.getDisplayName((err, res) => {
-                    if (err) console.error(err);
+                    if (err) {
+                        console.error(err);
+                        this.props.addMessage(res.data.errorMessage || "Server error");
+                    }
                     else if (res.data.displayname) {
                         this.setState({
                             displayname: res.data.displayname,
-                            dropdownState: "logged-in",
-                            errorMessage: undefined
+                            dropdownState: "logged-in"
                         });
                     }
                 });
@@ -82,19 +87,21 @@ class Header extends React.Component {
         let password = document.getElementById("password").value;
 
         this.loginUser(username, password, (err, res) => {
-            if (err) this.setState({ errorMessage: res.data.errorMessage || "Server error" });
+            if (err) this.props.addMessage(res.data.errorMessage || "Server error");
             else {
                 this.props.navigate(process.env.REACT_APP_USER_PAGE);
                 if (!$("#login-dropdown").hasClass("login-dropdown-display")) {
                     $("#login-dropdown").toggleClass('login-dropdown-display');
                 }
                 this.getDisplayName((err, res) => {
-                    if (err) console.error(err);
+                    if (err) {
+                        console.error(err);
+                        this.props.addMessage(res.data.errorMessage || "Server error");
+                    }
                     else if (res.data.displayname) {
                         this.setState({
                             displayname: res.data.displayname,
-                            dropdownState: "logged-in",
-                            errorMessage: undefined
+                            dropdownState: "logged-in"
                         });
                     }
                 });
@@ -106,7 +113,6 @@ class Header extends React.Component {
         if (this.state.dropdownState === "login") {
             return (
                 <div className="login-form">
-                    {this.state.errorMessage && <p id="message" className="error-message">{this.state.errorMessage || ""}</p>}
                     <input type="text" placeholder="Username" id="username" />
                     <input type="password" placeholder="Password" id="password" />
                     <button type="button" id="login-button" className="login-button" onClick={this.handleLogin}>Login</button>
@@ -117,7 +123,6 @@ class Header extends React.Component {
         else if (this.state.dropdownState === "register") {
             return(
                 <div className="login-form">
-                    {this.state.errorMessage && <p id="message" className="error-message">{this.state.errorMessage || ""}</p>}
                     <input type="text" placeholder="Username" id="username" />
                     <input type="password" placeholder="Password" id="password" />
                     <input type="text" placeholder="Display Name" id="displayname" />
@@ -132,7 +137,10 @@ class Header extends React.Component {
                         id="logout-button"
                         className="logout-button"
                         onClick={() => (this.logout((err, res) => {
-                            if (err) console.error(err);
+                            if (err) {
+                                console.error(err);
+                                this.props.addMessage(res.data.errorMessage || "Server error");
+                            }
                             else {
                                 if (this.props.location.pathname !== "/") {
                                     this.props.navigate("/");
@@ -141,7 +149,10 @@ class Header extends React.Component {
                                     $("#login-dropdown").toggleClass('login-dropdown-display');
                                 }
                                 this.getDisplayName((err, res) => {
-                                    if (err) console.error(err);
+                                    if (err) {
+                                        console.error(err);
+                                        this.props.addMessage(res.data.errorMessage || "Server error");
+                                    }
                                     else if (!res.data.displayname) {
                                         this.setState({
                                             displayname: res.data.displayname,
@@ -183,8 +194,10 @@ class Header extends React.Component {
                     <div>
                         <button type="button"
                                 className="login-dropdown-button">{this.state.displayname ? "v" : "Sign In"}</button>
-                        <div id="login-dropdown" className="login-dropdown login-dropdown-display">
-                            {this.getCurrentDropdownHTML()}
+                        <div className="login-dropdown-parent">
+                            <div id="login-dropdown" className="login-dropdown login-dropdown-display">
+                                {this.getCurrentDropdownHTML()}
+                            </div>
                         </div>
                     </div>
                 </div>

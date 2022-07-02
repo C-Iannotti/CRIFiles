@@ -35,7 +35,10 @@ class Home extends React.Component {
             user: this.state.userInput,
             file: this.state.fileInput
         }, (err, res) => {
-            if (err) console.error(err);
+            if (err) {
+                console.error(err);
+                if (res && res.data) this.props.addMessage(res.data.errorMessage || "Server error");
+            }
             else if (res) {
                 this.setState({
                     searchedFiles: res.data.files,
@@ -121,7 +124,7 @@ class Home extends React.Component {
     
     render() {
         return (
-            <div>
+            <div className="home-page">
                 {this.getFileDisplayHTML()}
             </div>
         );
