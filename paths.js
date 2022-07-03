@@ -67,17 +67,32 @@ function main(app, database) {
                 )
             }
         },
-        passport.authenticate("local", { failureRedirect: "/" }),
         function(req, res) {
-            res.status(204).send();
+            passport.authenticate("local", function(err, user) {
+                if (err || !user) res.status(500).json({ errorMessage: "Failed to register user" });
+                else {
+                    req.logIn(user, function(err) {
+                        if (err) res.status(500).json({ errorMessage: "Failed to login to registerd user"});
+                        else res.status(204).send();
+                    })
+                }
+            })(req, res)
         }
     );
 
     //API path for logging in a user
     app.post(process.env.LOGIN_PATH,
-        passport.authenticate("local", { failureRedirect: "/" }),
         function(req, res) {
-            res.status(204).send();
+            passport.authenticate("local", function(err, user) {
+                if (err) res.status(500).json({ errorMessage: "Server failed while logging in" });
+                else if (!user) res.status(500).json({ errorMessage: "Incorrect username/password"});
+                else {
+                    req.logIn(user, function(err) {
+                        if (err) res.status(500).json({ errorMessage: "Failed to login to registerd user"});
+                        else res.status(204).send();
+                    });
+                }
+            })(req, res)
         }
     );
 

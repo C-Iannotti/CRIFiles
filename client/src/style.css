@@ -101,12 +101,6 @@
     width: 100%;
 }
 
-.users-display-container-parent {
-    position: relative;
-    margin-left: auto;
-    margin-right: auto;
-}
-
 .metadata-update-form {
     display: flex;
     flex-direction: column;
@@ -215,6 +209,7 @@
     width: 100%;
     padding: 0px;
     margin: 0px 0px 10px 0px;
+    text-align: center;
 }
 
 .comment-input {
@@ -225,12 +220,20 @@
     resize: none;
 }
 
+.users-display-container-parent {
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .users-display-container {
     position: absolute;
+    background-color: white;
     display: inline-block;
     width: 400px;
     height: 210px;
     margin-left: -200px;
+    margin-top: -10px;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     z-index: 1;
 }
@@ -383,7 +386,7 @@
     display: inline-block;
 }
 
-.user-display-buttons {
+.users-display-buttons {
     width: 50%;
     display: flex;
     flex-direction: row;

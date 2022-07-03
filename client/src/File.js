@@ -266,7 +266,7 @@ class File extends React.Component {
                     <div className={this.state.toggleTrustedUsers ? "users-display-container" : "users-display-container-none"}
                         id="users-display-container">
                         <div className="users-display-controls">
-                            <div className="user-display-buttons">
+                            <div className="users-display-buttons">
                                 <button type="button"
                                         id="previous-searched-users-button"
                                         className="page-button"
@@ -278,7 +278,7 @@ class File extends React.Component {
                                         onClick={() => this.handleUserSearch(this.state.usersInput, this.state.searchedUsersPage+1)}
                                         >&#707;</button>
                             </div>
-                            <div className="user-display-buttons">
+                            <div className="users-display-buttons">
                                 <button type="button"
                                         id="previous-trusted-users-button"
                                         className="page-button"
