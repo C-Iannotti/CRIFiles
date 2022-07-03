@@ -10,6 +10,7 @@ import {
     uploadFile,
     deleteFile
 } from "./utils.js"
+import Loading from "./Loading.js"
 
 class User extends React.Component {
     constructor(props) {
@@ -50,6 +51,7 @@ class User extends React.Component {
             else if (res.data.displayname) {
                 this.setState({
                     displayname: res.data.displayname,
+                    pageLoaded: true
                 });
                 this.handleFileSearch(1);
             }
@@ -376,12 +378,15 @@ class User extends React.Component {
     }
 
     render() {
-        return (
-            <div className="user-page">
-                {this.getFileUploadFormHTML()}
-                {this.getFileDisplayHTML()}
-            </div>
-        )
+        if (!this.state.pageLoaded) return <Loading loadingMessage="Retrieving User's Page"/>
+        else {
+            return (
+                <div className="user-page">
+                    {this.getFileUploadFormHTML()}
+                    {this.getFileDisplayHTML()}
+                </div>
+            )
+        }
     }
 }
 

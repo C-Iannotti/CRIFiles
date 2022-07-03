@@ -11,6 +11,7 @@ import {
     retrieveFile,
     updateFile
 } from "./utils.js"
+import Loading from "./Loading.js"
 
 const SERVER_URL = process.env.REACT_APP_PROTOCOL
     + process.env.REACT_APP_DOMAIN;
@@ -74,11 +75,14 @@ class File extends React.Component {
                     this.retrieveFile(this.props.useDatabase, (err, res) => {
                         if (err) this.props.addMessage(res.data.errorMessage || "Server error");
                         else {
-                            this.displayFile(res)
+                            this.displayFile(res);
+                            this.setState({ pageLoaded: true}, this.handleTrustedUserDisplay);
                         };
                     });
                 }
-                this.handleTrustedUserDisplay();
+                else {
+                    this.setState({ pageLoaded: true }, this.handleTrustedUserDisplay);
+                }
             }
         })
     }
@@ -407,12 +411,15 @@ class File extends React.Component {
     }
 
     render() {
-        return(
-            <div className="file-page">
-                {this.getFileContainerHTML()}
-                {this.state.isUsers && this.getShareableUrlHTML()}
-            </div>
-        )
+        if (!this.state.pageLoaded) return <Loading />
+        else {
+            return(
+                <div className="file-page">
+                    {this.getFileContainerHTML()}
+                    {this.state.isUsers && this.getShareableUrlHTML()}
+                </div>
+            )
+        }
     }
 }
 
