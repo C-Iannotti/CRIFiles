@@ -119,16 +119,9 @@ class User extends React.Component {
         }, (err, res) => {
             if (err) {
                 console.error(err);
-                if (res && res.data) this.props.addMessage(res.data.errorMessage || "Server error");
+                this.props.addMessage(res && res.data.errorMessage ? res.data.errorMessage : "Server error");
             }
-            else if (res) {
-                this.setState({
-                    searchedFiles: res.data.files,
-                    totalFiles: res.data.totalFiles,
-                    filesController: undefined
-                });
-            }
-        })
+        });
     }
 
     handleUserSearch(userString, page) {
@@ -137,23 +130,11 @@ class User extends React.Component {
         this.getSearchedUsersPage(userString, page, (err, res) => {
             if (err) {
                 console.error(err);
-                if (res && res.data) this.props.addMessage(res.data.errorMessage || "Server error");
-                document.getElementById("previous-searched-users-button").removeAttribute("disabled");
-                document.getElementById("next-searched-users-button").removeAttribute("disabled");
+                this.props.addMessage(res.data && res.data.errorMessage ? res.data.errorMessage : "Server error");
             }
-            else if (res) {
-                this.setState({
-                    searchedUsers: res.data.users,
-                    moreSearchedUsers: res.data.moreSearchedUsers,
-                }, () => {
-                    document.getElementById("previous-searched-users-button").removeAttribute("disabled");
-                    document.getElementById("next-searched-users-button").removeAttribute("disabled");
-                });
-            }
-            else {
-                document.getElementById("previous-searched-users-button").removeAttribute("disabled");
-                document.getElementById("next-searched-users-button").removeAttribute("disabled");
-            }
+            
+            document.getElementById("previous-searched-users-button").removeAttribute("disabled");
+            document.getElementById("next-searched-users-button").removeAttribute("disabled");
         });
     }
 

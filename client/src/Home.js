@@ -37,16 +37,9 @@ class Home extends React.Component {
         }, (err, res) => {
             if (err) {
                 console.error(err);
-                if (res && res.data) this.props.addMessage(res.data.errorMessage || "Server error");
+                this.props.addMessage(res && res.data.errorMessage ? res.data.errorMessage : "Server error");
             }
-            else if (res) {
-                this.setState({
-                    searchedFiles: res.data.files,
-                    totalFiles: res.data.totalFiles,
-                    filesController: undefined
-                });
-            }
-        })
+        });
     }
 
     getFileDisplayHTML() {

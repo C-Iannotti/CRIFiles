@@ -11,24 +11,28 @@ export function getFilePage(page, data, callback=(() => { return })) {
             searchedFiles: [],
             filesPage: page,
             filesInput: page,
-            filesController: new AbortController()
-        }), err => {
-            if (err) console.error(err)
-            else {
-                axios({
-                    method: "post",
-                    url: SERVER_URL + process.env.REACT_APP_USER_FILES_PATH + "/" + (page - 1),
-                    withCredentials: true,
-                    signal: this.state.filesController.signal,
-                    data: data
-                    })
-                    .then(res => {
-                        callback(null, res)
-                    })
-                    .catch(err => {
-                        callback(err, err.response)
-                    });
-            }
+            filesController: new AbortController(),
+            loadingFilePage: true
+        }), () => {
+            axios({
+                method: "post",
+                url: SERVER_URL + process.env.REACT_APP_USER_FILES_PATH + "/" + (page - 1),
+                withCredentials: true,
+                signal: this.state.filesController.signal,
+                data: data
+                })
+                .then(res => {
+                    this.setState({
+                        searchedFiles: res.data.files,
+                        totalFiles: res.data.totalFiles,
+                        filesController: undefined,
+                        loadingFilePage: undefined
+                    }, () => callback(null, res));
+                })
+                .catch(err => {
+                    if (err.res) callback(err, err.response);
+                    else callback();
+                });
         });
     }
     else {
@@ -41,37 +45,43 @@ export function getSearchedUsersPage(userString, pageNumber, callback=(() => { r
             ((this.state.moreSearchedUsers === false && this.state.searchedUsersPage > pageNumber)
             || (this.state.moreSearchedUsers === undefined && userString !== "")
             || this.state.moreSearchedUsers === true))) {
+        if (this.state.searchedUsersController) this.state.searchedUsersController.abort();
         this.setState({
             searchedUsers: [],
             usersInput: userString,
             searchedUsersPage: pageNumber,
-            moreSearchedUsers: undefined
-        }, err => {
-            if (err) console.error(err)
-            if (userString && pageNumber >= 1) {
+            moreSearchedUsers: undefined,
+            loadingSearchedUsers: true,
+            searchedUsersController: new AbortController()
+        }, () => {
+            if (userString) {
                 axios({
                         method: "get",
                         url: SERVER_URL + process.env.REACT_APP_RETRIEVE_USERS_PATH
                             + "/" + this.state.usersInput + "/" + String(pageNumber - 1),
                         withCredentials: true,
+                        signal: this.state.searchedUsersController.signal
                     })
                     .then(res => {
-                        callback(null, res);
+                        this.setState({
+                            searchedUsersPage: pageNumber,
+                            searchedUsers: res.data.users,
+                            moreSearchedUsers: res.data.moreSearchedUsers,
+                            loadingSearchedUsers: undefined,
+                            searchedUsersController: undefined
+                        }, () => callback(null, res));
                     })
                     .catch(err => {
-                        callback(err, err.response);
+                        if (err.res) callback(err, err.response);
+                        else callback();
                     });
             }
-        })
-    }
-    else if (userString === "") {
-        this.setState({
-            searchedUsers: [],
-            usersInput: userString,
-            searchedUsersPage: 1,
-            moreSearchedUsers: undefined
-        }, () => {
-            callback();
+            else {
+                this.setState({
+                    searchedUsersPage: 1,
+                    loadingSearchedUsers: undefined
+                }, () => callback())
+            }
         })
     }
     else {
