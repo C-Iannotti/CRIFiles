@@ -95,7 +95,10 @@ class Home extends React.Component {
                             onClick={() => { this.handleFileSearch(this.state.filesPage+1) }}
                             >&#707;</button>
                 </div>
-                {(this.state.searchedFiles || []).map(file => {
+                {this.state.loadingFilePage ? 
+                <div className="dot-flashing dot-flashing-data"></div>
+                :
+                (this.state.searchedFiles || []).map(file => {
                     return (
                         <div key={file._id}
                             className="file-display-box"

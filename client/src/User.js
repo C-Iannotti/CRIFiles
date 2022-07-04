@@ -208,7 +208,10 @@ class User extends React.Component {
                             onClick={() => { this.handleFileSearch(this.state.filesPage+1) }}
                             >&#707;</button>
                 </div>
-                {(this.state.searchedFiles || []).map(file => {
+                {this.state.loadingFilePage ?
+                <div className="dot-flashing dot-flashing-data"></div>
+                :
+                (this.state.searchedFiles || []).map(file => {
                     return (
                         <div key={file._id}
                             className="file-display-box"
@@ -301,7 +304,10 @@ class User extends React.Component {
                         </div>
                         <div className="users-display">
                             <div className="searched-users-display">
-                                {(this.state.searchedUsers || []).map(user => {
+                                {this.state.loadingSearchedUsers ? 
+                                <div className="dot-flashing dot-flashing-data"></div>
+                                :
+                                (this.state.searchedUsers || []).map(user => {
                                     return (
                                         <div key={user._id + "_searched"} className="user-item-display" onClick={() => {
                                             if (Object.keys(this.state.trustedUsers || {}).length < Number(process.env.REACT_APP_MAX_TRUSTED_USERS)) {

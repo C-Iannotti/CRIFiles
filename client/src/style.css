@@ -155,6 +155,10 @@
 }
 
 .searched-users-display {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
     width: 100%;
     overflow: auto;
     word-break: normal;
@@ -168,6 +172,10 @@
     display: flex;
     flex-direction: row;
     cursor: pointer;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .login-dropdown-button {
@@ -527,6 +535,7 @@
 }
 
 .dot-flashing-data {
+    margin-top: 20px;
     width: 10px;
     height: 10px;
 }
