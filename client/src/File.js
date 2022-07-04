@@ -402,7 +402,7 @@ class File extends React.Component {
     }
 
     render() {
-        if (!this.state.pageLoaded) return <Loading />
+        if (!this.state.pageLoaded) return <Loading loadingMessage="Retrieving File"/>
         else {
             return(
                 <div className="file-page">
