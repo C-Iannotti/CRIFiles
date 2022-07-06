@@ -208,7 +208,7 @@ function main(app, database) {
         }
     );
 
-    //API for retrieving page of user's files' metadata
+    //API for retrieving page of files' metadata
     app.post(process.env.USER_FILES_PATH + "/:pageNum",
         (req, res) => {
             let searchObject = {}
@@ -278,7 +278,7 @@ function main(app, database) {
                         },
                         {
                             privacy: "private",
-                            trustedUsers: { "$exists": [req.user._id] }
+                            [`trustedUsers.${req.user._id}`]: { "$exists": true }
                         },
                         {
                             privacy: "public"
@@ -295,7 +295,7 @@ function main(app, database) {
                                 },
                                 {
                                     privacy: "private",
-                                    trustedUsers: { "$exists": [req.user._id] }
+                                    [`trustedUsers.${req.user._id}`]: { "$exists": true }
                                 },
                                 {
                                     privacy: "public"
