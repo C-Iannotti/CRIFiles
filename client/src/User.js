@@ -151,6 +151,8 @@ class User extends React.Component {
     toggleTrustedUsersContainer(e) {
         if (e.target.matches(".trusted-users-input") || 
             e.target.matches(".user-item-display") ||
+            e.target.matches(".user-item-displayname") ||
+            e.target.matches(".user-item-id") ||
             (document.getElementById("users-display-container") &&
             document.getElementById("users-display-container").contains(e.target))
             ) {
@@ -271,7 +273,7 @@ class User extends React.Component {
                        name="trustedUsers"
                        value={this.state.toggleTrustedUsers ? this.state.usersInput : `Trusted Users (${Object.keys(this.state.trustedUsers || {}).length} of ${process.env.REACT_APP_MAX_TRUSTED_USERS})`}
                        onChange={e => {this.handleUserSearch(e.target.value, 1)}}
-                       maxLength="20"
+                       maxLength="24"
                 />
                 <div className="users-display-container-parent">
                     <div className={this.state.toggleTrustedUsers ? "users-display-container" : "users-display-container-none"}
@@ -318,7 +320,8 @@ class User extends React.Component {
                                                 });
                                             }
                                         }}>
-                                            {user.displayname + ": " + user._id}
+                                            <p id="user-item-displayname" className="user-item-displayname">{user.displayname}</p>
+                                            <p className="user-item-id">{user._id}</p>
                                         </div>
                                     )
                                 })}
@@ -333,7 +336,8 @@ class User extends React.Component {
                                                 this.handleTrustedUserDisplay(this.state.trustedUsersPage);
                                             });
                                         }}>
-                                            {user.displayname + ": " + user._id}
+                                            <p id="user-item-displayname" className="user-item-displayname">{user.displayname}</p>
+                                            <p className="user-item-id">{user._id}</p>
                                         </div>
                                     )
                                 })}

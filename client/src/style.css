@@ -143,15 +143,33 @@
     display: flex;
     flex-direction: row;
     position: relative;
+    background-color:#E6E6FA;
+}
+
+.users-display-buttons {
+    width: 50%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    background-color: #66023C;
+}
+
+.users-display-controls {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    border: 1px solid black;
 }
 
 .trusted-users-display {
     width: 100%;
-    overflow: auto;
     word-break: normal;
     word-wrap: normal;
     white-space: pre;
-    border: 3px solid black;
+    border: 1px solid #66023C;
+    border-left: 2px solid #66023C;
+    overflow: auto;
 }
 
 .searched-users-display {
@@ -160,22 +178,37 @@
     justify-content: flex-start;
     align-items: center;
     width: 100%;
-    overflow: auto;
     word-break: normal;
     word-wrap: normal;
     white-space: pre;
-    border: 3px solid black;
+    border: 1px solid #66023C;
+    border-right: 2px solid #66023C;
+    overflow: auto;
 }
 
 .user-item-display {
-    background-color:cadetblue;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     cursor: pointer;
+    align-items: center;
     width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    gap: 2px;
+}
+
+.user-item-display:hover {
+    background-color: white;
+}
+
+.user-item-displayname {
+    color: black;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.user-item-id {
+    color: #66023C;
+    font-size: 0.7rem;
+    margin: 0;
 }
 
 .login-dropdown-button {
@@ -397,23 +430,8 @@
     border: none;
     padding: 5px;
     cursor: pointer;
-    color: rgb(82, 145, 241);
+    color: #E0B0FF;
     display: inline-block;
-}
-
-.users-display-buttons {
-    width: 50%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-around;
-}
-
-.users-display-controls {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    border: 1px solid black;
 }
 
 .page-number-max {
