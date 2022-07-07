@@ -81,7 +81,10 @@ class File extends React.Component {
                     });
                 }
                 else {
-                    this.setState({ pageLoaded: true }, this.handleTrustedUserDisplay);
+                    this.setState({
+                        pageLoaded: true,
+                        tag: <pre id="file-display" className="no-file-display">Unable to display file</pre>
+                    }, this.handleTrustedUserDisplay);
                 }
             }
         })
@@ -187,6 +190,9 @@ class File extends React.Component {
             }
             else if (fileSupport["tag"] === "img") {
                 this.setState({ tag: <img id="file-display" className="img-display" src={url} alt={this.state.filename + " display"} /> });
+            }
+            else {
+                this.setState({ tag: <pre id="file-display" className="no-file-display">Unable to display file</pre>});
             }
         }
     }

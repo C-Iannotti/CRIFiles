@@ -166,7 +166,7 @@ class User extends React.Component {
     getFileDisplayHTML() {
         return (
             <div className="file-search-container">
-                <div id="home-file-search" className="home-file-search">
+                <div id="file-search" className="file-search">
                     <button type="button"
                             id="file-search-clear"
                             className="clear-button"
@@ -177,7 +177,7 @@ class User extends React.Component {
                                     fileInput: ""}, () => this.handleFileSearch(1))
                                 }
                                 }
-                            >&#10006;</button>
+                            >&times;</button>
                     <div id="file-search-inputs" className="file-search-inputs">
                         <input type="text"
                             id="file-file-input"
@@ -187,28 +187,28 @@ class User extends React.Component {
                             onChange={e => {this.setState({fileInput: e.target.value}, () => this.handleFileSearch(1))}}
                             />
                     </div>
-                </div>
-                <div id="page-navigator" className="page-navigator">
-                    <button type="button"
-                            id="previous-page-button"
-                            className="page-button"
-                            onClick={() => { this.handleFileSearch(this.state.filesPage-1) }}
-                            >&#706;</button>
-                    <input type="text"
-                            id="page-number-input"
-                            className="page-number-input"
-                            value={this.state.filesInput}
-                            onKeyDown={this.filePageInputKeyDown}
-                            onChange={e => this.setState({ filesInput: e.target.value })}
-                    />
-                    <p id="page-number-max"
-                        className="page-number-max"> of {this.state.totalFiles ? Math.ceil(this.state.totalFiles / Number(process.env.REACT_APP_PAGE_SIZE)) : 1}
-                        </p>
-                    <button type="button"
-                            id="next-page-button"
-                            className="page-button"
-                            onClick={() => { this.handleFileSearch(this.state.filesPage+1) }}
-                            >&#707;</button>
+                    <div id="page-navigator" className="page-navigator">
+                        <button type="button"
+                                id="previous-page-button"
+                                className="page-button"
+                                onClick={() => { this.handleFileSearch(this.state.filesPage-1) }}
+                                >&#706;</button>
+                        <input type="text"
+                                id="page-number-input"
+                                className="page-number-input"
+                                value={this.state.filesInput}
+                                onKeyDown={this.filePageInputKeyDown}
+                                onChange={e => this.setState({ filesInput: e.target.value })}
+                        />
+                        <p id="page-number-max"
+                            className="page-number-max"> of {this.state.totalFiles ? Math.ceil(this.state.totalFiles / Number(process.env.REACT_APP_PAGE_SIZE)) : 1}
+                            </p>
+                        <button type="button"
+                                id="next-page-button"
+                                className="page-button"
+                                onClick={() => { this.handleFileSearch(this.state.filesPage+1) }}
+                                >&#707;</button>
+                    </div>
                 </div>
                 {this.state.loadingFilePage ?
                 <div className="dot-flashing dot-flashing-data"></div>
@@ -230,7 +230,7 @@ class User extends React.Component {
                             </div>
                             <button className="display-delete-button"
                                 onClick={() => this.handleDelete(file._id)}>
-                                X
+                                &times;
                             </button>
                         </div>
                     )
