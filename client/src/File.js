@@ -241,7 +241,7 @@ class File extends React.Component {
                     <p className="fileid-display">{"File ID: " + this.props.params.fileId}</p>
                     {this.state.editFile ?
                         <select id="privacy-input"
-                                className="privacy-input"
+                                className="privacy-input-file"
                                 name="privacy"
                                 defaultValue={this.state.privacy}
                                 key={this.state.privacy + "-update-form"}>
@@ -370,6 +370,7 @@ class File extends React.Component {
                         }
                     })}>Delete File</button>
                 </div>
+                {this.state.isUsers && this.getShareableUrlHTML()}
             </div>
         )
     }
@@ -417,7 +418,6 @@ class File extends React.Component {
             return(
                 <div className="file-page">
                     {this.getFileContainerHTML()}
-                    {this.state.isUsers && this.getShareableUrlHTML()}
                 </div>
             )
         }
