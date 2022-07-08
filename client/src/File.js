@@ -104,6 +104,7 @@ class File extends React.Component {
                         this.props.navigate(-1);
                     }
                     else {
+                        this.props.addMessage("Updated file!");
                         this.handleTrustedUserDisplay(this.state.trustedUsersPage);
                         this.setState({ editFile: false});
                     }
@@ -152,6 +153,7 @@ class File extends React.Component {
     }
 
     downloadFile(blob) {
+        console.log(blob);
         let a = $("<a style='display: none;'/>");
         let url = window.URL.createObjectURL(blob);
         a.attr("href", url);
@@ -195,6 +197,9 @@ class File extends React.Component {
                 this.setState({ tag: <pre id="file-display" className="no-file-display">Unable to display file</pre>});
             }
         }
+        else {
+            this.setState({ tag: <pre id="file-display" className="no-file-display">Unable to display file</pre> });
+        }
     }
 
     getFileContainerHTML() {
@@ -218,9 +223,7 @@ class File extends React.Component {
                             <button type="button"
                                 id="metadata-update-button"
                                 className="metadata-update-button"
-                                onClick={() => {
-                                    this.updateFileMetadata()
-                                }}
+                                onClick={() => this.updateFileMetadata()}
                                 >Update</button>
                         }
                         {!this.state.editFile &&
@@ -354,21 +357,27 @@ class File extends React.Component {
                     <button type="button"
                             id="download-button"
                             className="download-button"
-                            onClick={() => this.retrieveFile(this.props.useDatabase, (err, res) => {
+                            onClick={() => {
+                                this.props.addMessage("Retrieving file...");
+                                this.retrieveFile(this.props.useDatabase, (err, res) => {
                                 if (err) this.props.addMessage(res.data.errorMessage || "Server error");
                                 else {
-                                    this.downloadFile();
+                                    this.props.addMessage("Retrieved file!");
+                                    this.downloadFile(res);
                                 }
-                            })}>Download File</button>
-                    <button type="button" id="delete-button" className="delete-button" onClick={() => this.deleteFile(this.props.params.fileId, (err, res) => {
+                            })}}>Download File</button>
+                    <button type="button" id="delete-button" className="delete-button" onClick={() => {
+                        this.props.addMessage("Deleting file...");
+                        this.deleteFile(this.props.params.fileId, (err, res) => {
                         if (err) {
                             console.error(err);
                             this.props.addMessage(res.data.errorMessage || "Server error");
                         }
                         else {
+                            this.props.addMessage("Deleted file!");
                             this.props.navigate(-1);
                         }
-                    })}>Delete File</button>
+                    })}}>Delete File</button>
                 </div>
                 {this.state.isUsers && this.getShareableUrlHTML()}
             </div>
@@ -402,6 +411,7 @@ class File extends React.Component {
                                         this.props.addMessage(res.data.errorMessage || "Server error");
                                     }
                                     else {
+                                        this.props.addMessage("Created new URL");
                                         this.handleTrustedUserDisplay(this.state.trustedUsersPage);
                                     }
                                 })
