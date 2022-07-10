@@ -47,10 +47,14 @@ class Header extends React.Component {
 
     handleClick(e) {
         if (e.target.matches(".login-dropdown-button")) {
-            $("#login-dropdown").toggleClass("login-dropdown-display");
+            this.setState({
+                hasDropdown: !this.state.hasDropdown
+            }, () => $("#login-dropdown").toggleClass("login-dropdown-display"));
         }
         else if (!document.getElementById("login-dropdown").contains(e.target) && !$("#login-dropdown").hasClass("login-dropdown-display")) {
-            $("#login-dropdown").toggleClass('login-dropdown-display');
+            this.setState({
+                hasDropdown: false
+            }, () => $("#login-dropdown").toggleClass('login-dropdown-display'));
         }
     }
 
@@ -179,7 +183,7 @@ class Header extends React.Component {
                             if (this.props.location !== "/") {
                                 this.props.navigate("/")
                             }
-                        }}>Home</button>
+                        }}>File Sharing Website</button>
                 <div id="user-dropdown" className="user-dropdown">
                     <button id="user-display"
                             className="user-display"
@@ -193,7 +197,7 @@ class Header extends React.Component {
                             }}>{this.state.displayname}</button>
                     <div>
                         <button type="button"
-                                className="login-dropdown-button">{this.state.displayname ? "v" : "Sign In"}</button>
+                                className="login-dropdown-button">{this.state.displayname ? this.state.hasDropdown ? <>&and;</> : <>&or;</> : "Sign In"}</button>
                         <div className="login-dropdown-parent">
                             <div id="login-dropdown" className="login-dropdown login-dropdown-display">
                                 {this.getCurrentDropdownHTML()}

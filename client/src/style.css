@@ -2,6 +2,11 @@
     font-size: 15px;
 }
 
+body {
+    padding: 0;
+    margin: 0;
+}
+
 .app {
     display: flex;
     flex-direction: column;
@@ -12,12 +17,14 @@
 }
 
 .header {
-    height: 50px;
+    height: 60px;
     width: 100%;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    background-color: #66023C;
+    margin-bottom: 10px;
 }
 
 .loading-page {
@@ -32,6 +39,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
+    background-color: #E6E6FA;
+    padding: 10px;
 }
 
 .error-message {
@@ -39,15 +48,30 @@
 }
 
 .login-button {
-    background-color: darkslateblue;
+    background-color: rgb(94, 73, 227);
+    cursor: pointer;
+}
+
+.login-button:hover {
+    background-color: #E0B0FF;
 }
 
 .register-button {
     background-color: crimson;
+    cursor: pointer;
 }
 
-.upload-button {
-    background-color: cornflowerblue;
+.register-button:hover {
+    background-color: #E0B0FF;
+}
+
+.logout-button {
+    background-color:#E6E6FA;
+    cursor: pointer;
+}
+
+.logout-button:hover {
+    background-color:#E0B0FF;
 }
 
 .user-page {
@@ -93,6 +117,7 @@
 
 .file-upload-form-button {
     background-color: #E6E6FA;
+    cursor: pointer;
     border-radius: 10%;
 }
 
@@ -145,6 +170,7 @@
 
 .file-container-sidebar button {
     background-color:#E6E6FA;
+    cursor: pointer;
 }
 
 .file-container-sidebar button:hover {
@@ -167,6 +193,7 @@
 
 .file-container-buttons button {
     background-color: #E6E6FA;
+    cursor: pointer;
 }
 
 .file-container-buttons button:hover{
@@ -187,6 +214,7 @@
 .token-update-button {
     width: 15%;
     background-color: #E6E6FA;
+    cursor: pointer;
 }
 
 .token-update-button:hover {
@@ -210,7 +238,7 @@
 .pre-display {
     height: auto;
     min-height: 300px;
-    max-height: 1000px;
+    max-height: 700px;
     width: 500px;
     overflow: auto;
     word-break: normal;
@@ -245,12 +273,11 @@
 
 .audio-display {
     width: 500px;
-    border: 5px solid #E6E6FA;
 }
 
 .iframe-display {
     height: auto;
-    height: 1000px;
+    height: 700px;
     width: 500px;
     border: 5px solid #E6E6FA;
 }
@@ -335,9 +362,13 @@
     border: none;
     padding: 5px;
     cursor: pointer;
-    color: rgb(42, 123, 173);
+    color: #E6E6FA;
     display: inline-block;
+}
+
+.login-dropdown-button:hover {
     text-decoration: underline;
+    text-decoration-color: #E6E6FA;
 }
 
 .login-dropdown-parent {
@@ -352,12 +383,13 @@
 }
 
 .login-dropdown-display {
-    display: none
+    display: none;
 }
 
 .user-dropdown {
     display: flex;
     flex-direction: row;
+    padding: 30px;
 }
 
 .user-display {
@@ -366,9 +398,13 @@
     border: none;
     padding: 5px;
     cursor: pointer;
-    color: rgb(42, 123, 173);
+    color: #E0B0FF;
     display: inline-block;
+}
+
+.user-display:hover {
     text-decoration: underline;
+    text-decoration-color: #E6E6FA;
 }
 
 .trusted-users-input {
@@ -438,11 +474,11 @@
     position: relative;
     background: none;
     border: none;
-    padding: 5px;
+    padding: 30px;
     cursor: pointer;
-    color: rgb(42, 123, 173);
+    color: #E6E6FA;
     display: inline-block;
-    text-decoration: underline;
+    font-size: 1.2rem;
 }
 
 .file-search {
@@ -550,7 +586,7 @@
     border: none;
     padding: 5px;
     cursor: pointer;
-    color: #E0B0FF;
+    color: rgb(215, 51, 51);
     display: inline-block;
 }
 
@@ -612,6 +648,10 @@
     color: rgb(103, 114, 127);
     display: inline-block;
     margin: -3px 10px 0px 0px;
+}
+
+.message-clear-button:hover {
+    color: #E0B0FF;
 }
 
 .loading-message {
