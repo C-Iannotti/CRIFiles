@@ -441,7 +441,7 @@ function main(app, database) {
                             isUsers: doc.user.toString() === userId.toString(),
                             comment: doc.comment,
                             token: doc.token.toString(),
-                            isAccessible: (doc.privacy === "public" || req.user._id.equals(doc.user)
+                            isAccessible: (doc.privacy === "public" || userId.equals(doc.user)
                                 || (doc.privacy === "private" && doc.trustedUsers[userId.toString()] !== undefined)
                                 || (doc.privacy === "shared" && req.body.token === doc.token.toString()))
                         });

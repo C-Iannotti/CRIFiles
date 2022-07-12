@@ -1,5 +1,7 @@
 require("dotenv").config()
 
+const https = require("https");
+const fs = require("fs");
 const express = require("express");
 const session = require("express-session");
 const bodyParser = require("body-parser");
@@ -16,6 +18,11 @@ const DOMAIN = process.env.DOMAIN;
 const PORT = process.env.PORT;
 const MONGO_URI = process.env.MONGO_URI;
 const SESSION_SECRET = process.env.SESSION_SECRET;
+
+const credentials = {
+    key: fs.readFileSync("./localhost-key.pem"),
+    cert: fs.readFileSync("./localhost.pem")
+};
 
 
 //Sets express properties: including engine, url reading and encoding,
@@ -43,7 +50,12 @@ app.use(session({
     resave: true,
     secret: SESSION_SECRET,
     saveUninitialized: true,
-    cookie: {secure: false},
+    cookie: {
+        secure: true,
+        sameSite: "None",
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 8
+    },
     key: "express.sid"
 }));
 
@@ -56,6 +68,11 @@ DB(async (client) => {
     const database = await client.db("file-sharer-website");
     paths(app, database);
     auth(app, database);
+
+    //Adds default path for serving static files
+    app.get("*", (req, res) => {
+        res.sendFile(__dirname + "/client/build/index.html");
+    });
 });
 
-app.listen(PORT);
+https.createServer(credentials, app).listen(PORT);
