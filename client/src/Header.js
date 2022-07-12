@@ -8,6 +8,9 @@ import {
 import { withWrapper } from "./componentWrapper";
 import $ from "jquery"
 
+/* A React component for displaying header
+    information and interactions
+*/
 class Header extends React.Component {
     constructor(props) {
         super(props)

@@ -12,6 +12,9 @@ import {
 } from "./utils.js"
 import Loading from "./Loading.js"
 
+/* React component for displaying the user page's
+    information and interactions
+*/
 class User extends React.Component {
     constructor(props) {
         super(props)

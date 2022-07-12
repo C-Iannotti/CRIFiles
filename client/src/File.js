@@ -19,6 +19,9 @@ const APP_URL = (process.env.REACT_APP_DEPLOYMENT === "development"
     ? process.env.REACT_APP_DEV_URL : SERVER_URL);
 const DB_STORE_NAME = process.env.REACT_APP_IDB_STORE_NAME;
 
+/* A React component for displaying information
+    and interactions for a file
+*/
 class File extends React.Component {
     constructor(props) {
         super(props);

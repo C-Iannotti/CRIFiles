@@ -12,7 +12,7 @@ import useDatabase from "./Database";
 /*
  *A wrapper class to give passed React Components:
  * a router to navigate to other pages of the application,
- * parameter passing in the URL,
+ * ability to pass parameters in URL,
  * and a function to use the IndexedDB
  */
 export const withWrapper = (Component) => {

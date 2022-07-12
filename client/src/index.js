@@ -9,6 +9,9 @@ import User from "./User.js";
 import File from "./File.js";
 import Header from "./Header.js"
 
+/*React component for displaying the website
+    with Routes for each page and popup messages
+*/
 class App extends React.Component {
     constructor(props) {
         super(props)

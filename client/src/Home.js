@@ -5,6 +5,10 @@ import {
 } from "./utils.js"
 import $ from "jquery"
 
+
+/*A React component for displaying the home page's
+    information and interactions
+*/
 class Home extends React.Component {
     constructor(props) {
         super(props);

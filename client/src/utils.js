@@ -4,19 +4,27 @@ const SERVER_URL = process.env.REACT_APP_PROTOCOL
     + process.env.REACT_APP_DOMAIN;
 const DB_STORE_NAME = process.env.REACT_APP_IDB_STORE_NAME;
 
-export function getFilePage(page, data, callback=(() => { return })) {
-    if ((page === 1) || (page > 1 && page <= Math.ceil(this.state.totalFiles / process.env.REACT_APP_PAGE_SIZE))) {
+/*
+ * param: pageNumber (valid number for page of files)
+ * param: data (object containing acceptable conditions)
+ * param: callback (callable function)
+ * use: makes an API call to retrieve pageNumber file page
+ *   meeting data conditions and sends either an error,
+ *   response, or nothing to the callback upon completion 
+ */
+export function getFilePage(pageNumber, data, callback=(() => { return })) {
+    if ((pageNumber === 1) || (pageNumber > 1 && pageNumber <= Math.ceil(this.state.totalFiles / process.env.REACT_APP_PAGE_SIZE))) {
         if (this.state.filesController) this.state.filesController.abort();
         this.setState(({
             searchedFiles: [],
-            filesPage: page,
-            filesInput: page,
+            filesPage: pageNumber,
+            filesInput: pageNumber,
             filesController: new AbortController(),
             loadingFilePage: true
         }), () => {
             axios({
                 method: "post",
-                url: SERVER_URL + process.env.REACT_APP_USER_FILES_PATH + "/" + (page - 1),
+                url: SERVER_URL + process.env.REACT_APP_USER_FILES_PATH + "/" + (pageNumber - 1),
                 withCredentials: true,
                 signal: this.state.filesController.signal,
                 data: data
@@ -40,6 +48,15 @@ export function getFilePage(page, data, callback=(() => { return })) {
     }
 };
 
+/*
+ * param: userString (string of characters)
+ * param: pageNumber (valid number for page of users)
+ * param: callback (callable function)
+ * use: makes an API call to retrieve pageNumber users page
+ *   with userString preceding characters and sends either
+ *   an error, response, or nothing to the callback upon
+ *   completion 
+ */
 export function getSearchedUsersPage(userString, pageNumber, callback=(() => { return })) {
     if (pageNumber === 1 || (pageNumber > 1 &&
             ((this.state.moreSearchedUsers === false && this.state.searchedUsersPage > pageNumber)
@@ -89,6 +106,13 @@ export function getSearchedUsersPage(userString, pageNumber, callback=(() => { r
     }
 };
 
+/*
+ * param: pageNumber (valid number for page of trusted users)
+ * param: callback (callable function)
+ * use: updates state to include a subsection of  
+ *   meeting data conditions and sends either an error,
+ *   response, or nothing to the callback upon completion 
+ */
 export function getTrustedUsersPage(pageNumber, callback=(() => { return })) {
     if (pageNumber >= 1 && 
         pageNumber <= Math.ceil(Object.keys(this.state.trustedUsers).length /
@@ -119,6 +143,12 @@ export function getTrustedUsersPage(pageNumber, callback=(() => { return })) {
     }
 }
 
+/*
+ * param: callback (callable function)
+ * use: makes an API call to retrieve the display name for
+ *   from the login cookie stored on the device sends either
+ *   an error or response to the callback upon completion 
+ */
 export function getDisplayName(callback=(() => { return })) {
     axios({
         method: "get",
@@ -133,6 +163,15 @@ export function getDisplayName(callback=(() => { return })) {
         })
 };
 
+/*
+ * param: fileId (string of characters)
+ * param: token (string of characters)
+ * param: callback (callable function)
+ * use: makes an API call to retrieve a file's metadata
+ *   with fileId as an ID and with token used to determine
+ *   accessibility and sends either an error or response
+ *   to the callback upon completion 
+ */
 export function getFileMetadata(fileId, token=undefined, callback=(() => { return })) {
     axios({
         method: "post",
@@ -153,6 +192,13 @@ export function getFileMetadata(fileId, token=undefined, callback=(() => { retur
         });
 };
 
+/*
+ * param: fileId (string of characters)
+ * param: callback (callable function)
+ * use: makes an API call to delete a file with
+ *   fileId as an ID and sends either an error or response
+ *   to the callback upon completion 
+ */
 export function deleteFile(fileId, callback=(() => { return })) {
     axios({
         method: "delete",
@@ -170,6 +216,13 @@ export function deleteFile(fileId, callback=(() => { return })) {
         });
 };
 
+/*
+ * param: fileId (string of characters)
+ * param: callback (callable function)
+ * use: makes an API call to change the valid token
+ *   for a file with fileId as an ID and sends either
+ *   an error or response to the callback upon completion 
+ */
 export function createNewToken(fileId, callback=(() => { return })) {
     axios({
         method: "put",
@@ -187,6 +240,12 @@ export function createNewToken(fileId, callback=(() => { return })) {
         });
 };
 
+/*
+ * param: callback (callable function)
+ * use: makes an API call to remove the current cookie
+ *   for a logged in user and sends either an error
+ *   or response to the callback upon completion 
+ */
 export function logout(callback=(() => { return })) {
     axios({
         method: "get",
@@ -201,6 +260,16 @@ export function logout(callback=(() => { return })) {
         });
 };
 
+/*
+ * param: file (a file object)
+ * param: privacy (a string of characters)
+ * param: trustedUsers (a JSON object)
+ * param: comment (a string of characters)
+ * param: callback (callable function)
+ * use: makes an API call to upload file with the metadata
+ *   privacy, trustedUsers, and comment and sends either
+ *   an error or response to the callback upon completion 
+ */
 export function uploadFile(file, privacy, trustedUsers, comment, callback=() => { return }) {
     axios({
         method: "post",
@@ -222,6 +291,14 @@ export function uploadFile(file, privacy, trustedUsers, comment, callback=() => 
         })
 };
 
+/*
+ * param: database (IndexedDB database function)
+ * param: callback (callable function)
+ * use: checks if sent database contains file and either
+ *   returns it if so or makes an API call to retrieve it
+ *   if not and sends either an error or data blob
+ *   to the callback upon completion 
+ */
 export function retrieveFile(database, callback=(() => { return })) {
     database(db => {
         let objectStore = db.transaction(DB_STORE_NAME).objectStore(DB_STORE_NAME);
@@ -279,6 +356,17 @@ export function retrieveFile(database, callback=(() => { return })) {
     });
 };
 
+/*
+ * param: fileId (a file object)
+ * param: trustedUsers (a JSON object)
+ * param: comment (a string of characters)
+ * param: privacy (a string of characters)
+ * param: callback (callable function)
+ * use: makes an API call to update a file's metadata that
+ *   has fileId as an ID with privacy, trustedUsers,
+ *   and comment and sends either an error or response
+ *   to the callback upon completion 
+ */
 export function updateFile(fileId, trustedUsers, comment, privacy, callback=(() => { return })) {
     axios({
         method: "put",
@@ -299,6 +387,16 @@ export function updateFile(fileId, trustedUsers, comment, privacy, callback=(() 
         })
 };
 
+/*
+ * param: username (string of characters)
+ * param: password (string of characters)
+ * param: displayname (string of characters)
+ * param: callback (callable function)
+ * use: makes an API call to reister a user with the
+ *  username, password, and displayname and sends
+ *  either an error or response to the callback
+ *  upon completion 
+ */
 export function registerUser(username, password, displayname, callback=(() => { return })) {      
     axios.post(SERVER_URL + process.env.REACT_APP_REGISTER_PATH, {
             username: username,
@@ -316,6 +414,15 @@ export function registerUser(username, password, displayname, callback=(() => { 
         });
 };
 
+/*
+ * param: username (string of characters)
+ * param: password (string of characters)
+ * param: callback (callable function)
+ * use: makes an API call to login a user with username
+ *   and password, sets a cookie for future API calls, 
+ *   and sends either an error or response to the
+ *   callback upon completion 
+ */
 export function loginUser(username, password, callback=(() => { return })) {
     axios.post(SERVER_URL + process.env.REACT_APP_LOGIN_PATH, {
         username: username,
