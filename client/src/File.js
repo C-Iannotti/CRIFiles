@@ -338,7 +338,7 @@ class File extends React.Component {
                         </div>
                     </div>
                 </div>
-                <div id="file-display-holder">{this.state.tag}</div>
+                <div id="file-display-holder" className="file-display-holder">{this.state.tag}</div>
                 {this.state.editFile ?
                     <textarea id="comment-input"
                         className="comment-input"

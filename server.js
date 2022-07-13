@@ -14,7 +14,6 @@ const DB = require("./connection.js");
 const paths = require("./paths.js");
 const { auth } = require("./auth.js");
 
-const DOMAIN = process.env.DOMAIN;
 const PORT = process.env.PORT;
 const MONGO_URI = process.env.MONGO_URI;
 const SESSION_SECRET = process.env.SESSION_SECRET;
@@ -46,8 +45,8 @@ app.use(session({
     secret: SESSION_SECRET,
     saveUninitialized: true,
     cookie: {
-        secure: true,
-        sameSite: "None",
+        secure: process.env.PROTOCOL === "https://",
+        sameSite: process.env.PROTOCOL === "https://" ? "none" : "lax",
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 8
     },

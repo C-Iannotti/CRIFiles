@@ -131,7 +131,10 @@ body {
     flex-direction: column;
     justify-content: center;
     background-color: #66023C;
+    margin-top: 30px;
     padding: 10px;
+    width: 80%;
+    max-width: 600px;
 }
 
 .file-container-header {
@@ -160,12 +163,12 @@ body {
 .file-container-sidebar {
     position: absolute;
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: flex-end;
+    flex-direction: row;
+    align-items: flex-center;
+    justify-content: flex-start;
     width: 100px;
-    margin-left: -120px;
-    margin-top: 15px;
+    margin-top: -40px;
+    gap: 10px;
 }
 
 .file-container-sidebar button {
@@ -239,7 +242,7 @@ body {
     height: auto;
     min-height: 300px;
     max-height: 700px;
-    width: 500px;
+    width: 100%;
     overflow: auto;
     word-break: normal;
     word-wrap: normal;
@@ -247,6 +250,7 @@ body {
     border: 5px solid #E6E6FA;
     background-color: white;
     color: black;
+    box-sizing: border-box;
 }
 
 .no-file-display {
@@ -254,32 +258,36 @@ body {
     color: black;
     border: 5px solid #E6E6FA;
     height: 300px;
-    width: 500px;
+    width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 1.3rem;
+    box-sizing: border-box;
 }
 
 .img-display {
-    width: 500px;
+    width: 100%;
     border: 5px solid #E6E6FA;
+    box-sizing: border-box;
 }
 
 .video-display {
-    width: 500px;
+    width: 100%;
     border: 5px solid #E6E6FA;
+    box-sizing: border-box;
 }
 
 .audio-display {
-    width: 500px;
+    width: 100%;
 }
 
 .iframe-display {
     height: auto;
     height: 700px;
-    width: 500px;
+    width: 100%;
     border: 5px solid #E6E6FA;
+    box-sizing: border-box;
 }
 
 .users-display {
@@ -380,6 +388,7 @@ body {
     position: absolute;
     right: 0;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    z-index: 1;
 }
 
 .login-dropdown-display {
