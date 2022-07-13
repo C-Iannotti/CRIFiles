@@ -19,11 +19,6 @@ const PORT = process.env.PORT;
 const MONGO_URI = process.env.MONGO_URI;
 const SESSION_SECRET = process.env.SESSION_SECRET;
 
-const credentials = {
-    key: fs.readFileSync("./localhost-key.pem"),
-    cert: fs.readFileSync("./localhost.pem")
-};
-
 
 //Sets express properties: including engine, url reading and encoding,
 // and the React App
@@ -75,4 +70,13 @@ DB(async (client) => {
     });
 });
 
-https.createServer(credentials, app).listen(PORT);
+if (process.env.PROTOCOL === "https://") {
+    const credentials = {
+        key: fs.readFileSync("./localhost-key.pem"),
+        cert: fs.readFileSync("./localhost.pem")
+    };
+    https.createServer(credentials, app).listen(PORT);
+}
+else {
+    app.listen(PORT);
+}

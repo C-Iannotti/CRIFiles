@@ -75,7 +75,7 @@ class File extends React.Component {
             }
             else {
                 if (res.data.size <= process.env.REACT_APP_MAX_FILE_SIZE) {
-                    this.retrieveFile(this.props.useDatabase, (err, res) => {
+                    this.retrieveFile(this.props.useDatabase, this.props.params.fileId, this.props.params.token, (err, res) => {
                         if (err) this.props.addMessage(res.data.errorMessage || "Server error");
                         else {
                             this.displayFile(res);

@@ -293,17 +293,19 @@ export function uploadFile(file, privacy, trustedUsers, comment, callback=() => 
 
 /*
  * param: database (IndexedDB database function)
+ * param: fileId (string of characters)
+ * param: token (string of characters)
  * param: callback (callable function)
- * use: checks if sent database contains file and either
- *   returns it if so or makes an API call to retrieve it
- *   if not and sends either an error or data blob
- *   to the callback upon completion 
+ * use: checks if sent database contains file with matching
+ *   fileId and either returns it or makes an API call to
+ *   retrieve it using a token and stores it then sends
+ *   either an error or file to the callback upon completion 
  */
-export function retrieveFile(database, callback=(() => { return })) {
+export function retrieveFile(database, fileId, token, callback=(() => { return })) {
     database(db => {
         let objectStore = db.transaction(DB_STORE_NAME).objectStore(DB_STORE_NAME);
 
-        let req1 = objectStore.openCursor(this.props.params.fileId);
+        let req1 = objectStore.openCursor(fileId);
         req1.onerror = event => {
             console.error("Unable to check database for file: " + event.target.errorcode);
         }
@@ -316,8 +318,8 @@ export function retrieveFile(database, callback=(() => { return })) {
                     withCredentials: true,
                     responseType: "blob",
                     data: {
-                        fileId: this.props.params.fileId,
-                        token: this.props.params.token
+                        fileId: fileId,
+                        token: token
                     }
                     })
                     .then(res => {
@@ -332,7 +334,7 @@ export function retrieveFile(database, callback=(() => { return })) {
                         };
 
                         let req2 = transaction.objectStore(DB_STORE_NAME).add({
-                            fileId: this.props.params.fileId,
+                            fileId: fileId,
                             blob: res.data
                         });
                         req2.onsuccess = event => {
