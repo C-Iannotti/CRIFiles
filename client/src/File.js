@@ -9,7 +9,8 @@ import {
     getTrustedUsersPage,
     createNewToken,
     retrieveFile,
-    updateFile
+    updateFile,
+    downloadFile
 } from "./utils.js"
 import Loading from "./Loading.js"
 
@@ -42,7 +43,8 @@ class File extends React.Component {
         this.handleTrustedUserDisplay = this.handleTrustedUserDisplay.bind(this);
         this.handleUserSearch = this.handleUserSearch.bind(this);
         this.displayFile = this.displayFile.bind(this);
-        this.downloadFile = this.downloadFile.bind(this);
+        this.downloadFile = downloadFile.bind(this);
+        this.handleDownload = this.handleDownload.bind(this);
         this.checkFile = this.checkFile.bind(this);
         this.updateFileMetadata = this.updateFileMetadata.bind(this);
         this.getShareableUrlHTML = this.getShareableUrlHTML.bind(this);
@@ -155,16 +157,21 @@ class File extends React.Component {
         }
     }
 
-    downloadFile(blob) {
-        console.log(blob);
-        let a = $("<a style='display: none;'/>");
-        let url = window.URL.createObjectURL(blob);
-        a.attr("href", url);
-        a.attr("download", this.state.filename);
-        $("body").append(a);
-        a[0].click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
+    handleDownload() {
+        downloadFile(this.props.params.fileId, this.props.params.token, (err, res) => {
+            if (err) console.error(err);
+            else {
+                console.log(res)
+                let a = $("<a style='display: none;'/>");
+                let url = window.URL.createObjectURL(res);
+                a.attr("href", url);
+                a.attr("download", this.state.filename);
+                $("body").append(a);
+                a[0].click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            }
+        })
     }
 
     displayFile(blob) {
@@ -360,15 +367,7 @@ class File extends React.Component {
                     <button type="button"
                             id="download-button"
                             className="download-button"
-                            onClick={() => {
-                                this.props.addMessage("Retrieving file...");
-                                this.retrieveFile(this.props.useDatabase, (err, res) => {
-                                if (err) this.props.addMessage(res.data.errorMessage || "Server error");
-                                else {
-                                    this.props.addMessage("Retrieved file!");
-                                    this.downloadFile(res);
-                                }
-                            })}}>Download File</button>
+                            onClick={() => this.handleDownload()}>Download File</button>
                     <button type="button" id="delete-button" className="delete-button" onClick={() => {
                         this.props.addMessage("Deleting file...");
                         this.deleteFile(this.props.params.fileId, (err, res) => {

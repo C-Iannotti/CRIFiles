@@ -216,6 +216,26 @@ export function deleteFile(fileId, callback=(() => { return })) {
         });
 };
 
+export function downloadFile(fileId, token, callback=(() => { return })) {
+    fetch(SERVER_URL + process.env.REACT_APP_RETRIEVE_FILE_PATH, {
+        method: "post",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({
+            fileId: fileId,
+            token: token
+        })
+    })
+    .then(res => {
+        console.log("Why")
+        console.log("Here")
+        res.blob().then(blob => callback(null, blob))
+    })
+    .catch(err => callback(err, err.response));
+}
+
 /*
  * param: fileId (string of characters)
  * param: callback (callable function)
@@ -319,7 +339,7 @@ export function retrieveFile(database, fileId, token, callback=(() => { return }
                     responseType: "blob",
                     data: {
                         fileId: fileId,
-                        token: token
+                        token: token,
                     }
                     })
                     .then(res => {
