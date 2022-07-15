@@ -6,7 +6,7 @@ import {
 import {
   useRef,
 } from "react";
-import useDatabase from "./Database";
+import database from "./Database";
 
 
 /*
@@ -22,7 +22,7 @@ export const withWrapper = (Component) => {
         navigate={useNavigate()}
         {...props}
         params={useParams()}
-        useDatabase={useDatabase}
+        database={database}
         location={useLocation()}
         useRef={useRef(null)}
         />

@@ -8,7 +8,7 @@ const DB_STORE_NAME = process.env.REACT_APP_IDB_STORE_NAME;
  *param: userFunction(function with one database parameter)
  *return: Error or null
  */
-function useDatabase(userFunction) {
+function database(userFunction) {
     if (window.indexedDB) {
         let request = window.indexedDB.open(DB_NAME, DB_VERSION);
         request.onerror = event => {
@@ -35,4 +35,4 @@ function useDatabase(userFunction) {
     }
 }
 
-export default useDatabase
+export default database

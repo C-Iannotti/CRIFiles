@@ -216,26 +216,6 @@ export function deleteFile(fileId, callback=(() => { return })) {
         });
 };
 
-export function downloadFile(fileId, token, callback=(() => { return })) {
-    fetch(SERVER_URL + process.env.REACT_APP_RETRIEVE_FILE_PATH, {
-        method: "post",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        credentials: "include",
-        body: JSON.stringify({
-            fileId: fileId,
-            token: token
-        })
-    })
-    .then(res => {
-        console.log("Why")
-        console.log("Here")
-        res.blob().then(blob => callback(null, blob))
-    })
-    .catch(err => callback(err, err.response));
-}
-
 /*
  * param: fileId (string of characters)
  * param: callback (callable function)
@@ -319,7 +299,8 @@ export function uploadFile(file, privacy, trustedUsers, comment, callback=() => 
  * use: checks if sent database contains file with matching
  *   fileId and either returns it or makes an API call to
  *   retrieve it using a token and stores it then sends
- *   either an error or file to the callback upon completion 
+ *   either an error or file to the callback upon completion
+ *   along with the db created from the database function 
  */
 export function retrieveFile(database, fileId, token, callback=(() => { return })) {
     database(db => {
@@ -340,31 +321,15 @@ export function retrieveFile(database, fileId, token, callback=(() => { return }
                     data: {
                         fileId: fileId,
                         token: token,
+                    },
+                    onDownloadProgress: (progressEvent) => {
+                        this.setState({
+                            fileDownloadProgress: Math.round((progressEvent.loaded * 100) / this.state.size)
+                        });
                     }
                     })
                     .then(res => {
-                        let transaction = db.transaction([DB_STORE_NAME], "readwrite");
-                        transaction.oncomplete = event => {
-                            console.log("Completed adding to database: " + event.target.result);
-                            db.close();
-                        }
-                        transaction.onerror = event => {
-                            console.error("Unable to locally store file: " + event.target.errorCode);
-                            db.close();
-                        };
-
-                        let req2 = transaction.objectStore(DB_STORE_NAME).add({
-                            fileId: fileId,
-                            blob: res.data
-                        });
-                        req2.onsuccess = event => {
-                            console.log("Added item: " + event.target.result);
-                        };
-                        req2.onerror = event => {
-                            console.error("Unable to locally store file: " + event.target.errorCode);
-                        };
-
-                        callback(null, res.data);
+                        callback(null, res.data, db);
                     })
                     .catch(err => {
                         callback(err, err.response);

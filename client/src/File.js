@@ -9,8 +9,7 @@ import {
     getTrustedUsersPage,
     createNewToken,
     retrieveFile,
-    updateFile,
-    downloadFile
+    updateFile
 } from "./utils.js"
 import Loading from "./Loading.js"
 
@@ -43,7 +42,6 @@ class File extends React.Component {
         this.handleTrustedUserDisplay = this.handleTrustedUserDisplay.bind(this);
         this.handleUserSearch = this.handleUserSearch.bind(this);
         this.displayFile = this.displayFile.bind(this);
-        this.downloadFile = downloadFile.bind(this);
         this.handleDownload = this.handleDownload.bind(this);
         this.checkFile = this.checkFile.bind(this);
         this.updateFileMetadata = this.updateFileMetadata.bind(this);
@@ -62,7 +60,7 @@ class File extends React.Component {
     checkFile() {
         this.getFileMetadata(this.props.params.fileId, this.props.params.token, (err, res) => {
             if (err || !res.data.isAccessible) {
-                this.props.useDatabase(db => {
+                this.props.database(db => {
                     let request = db.transaction([DB_STORE_NAME], "readwrite")
                                     .objectStore(DB_STORE_NAME)
                                     .delete(this.props.params.fileId);
@@ -77,11 +75,35 @@ class File extends React.Component {
             }
             else {
                 if (res.data.size <= process.env.REACT_APP_MAX_FILE_SIZE) {
-                    this.retrieveFile(this.props.useDatabase, this.props.params.fileId, this.props.params.token, (err, res) => {
+                    this.retrieveFile(this.props.database, this.props.params.fileId, this.props.params.token, (err, res, db) => {
                         if (err) this.props.addMessage(res.data.errorMessage || "Server error");
                         else {
+                            if (db) {
+                                let transaction = db.transaction([DB_STORE_NAME], "readwrite");
+                                transaction.oncomplete = event => {
+                                    console.log("Completed adding to database: " + event.target.result);
+                                    db.close();
+                                }
+                                transaction.onerror = event => {
+                                    console.error("Unable to locally store file: " + event.target.errorCode);
+                                    db.close();
+                                };
+
+                                let req2 = transaction.objectStore(DB_STORE_NAME).add({
+                                    fileId: this.props.params.fileId,
+                                    blob: res
+                                });
+                                req2.onsuccess = event => {
+                                    console.log("Added item: " + event.target.result);
+                                };
+                                req2.onerror = event => {
+                                    console.error("Unable to locally store file: " + event.target.errorCode);
+                                };
+                            }
                             this.displayFile(res);
-                            this.setState({ pageLoaded: true}, this.handleTrustedUserDisplay);
+                            this.setState({ pageLoaded: true, fileDownloadProgress: undefined}, () => {
+                                this.handleTrustedUserDisplay();
+                            });
                         };
                     });
                 }
@@ -158,10 +180,11 @@ class File extends React.Component {
     }
 
     handleDownload() {
-        downloadFile(this.props.params.fileId, this.props.params.token, (err, res) => {
+        document.getElementById("download-button").setAttribute("disabled", "true");
+        this.props.addMessage("Retrieving file...");
+        this.retrieveFile(this.props.database, this.props.params.fileId, this.props.params.token, (err, res) => {
             if (err) console.error(err);
             else {
-                console.log(res)
                 let a = $("<a style='display: none;'/>");
                 let url = window.URL.createObjectURL(res);
                 a.attr("href", url);
@@ -170,6 +193,9 @@ class File extends React.Component {
                 a[0].click();
                 window.URL.revokeObjectURL(url);
                 a.remove();
+                this.setState({
+                    fileDownloadProgress: undefined
+                }, () => document.getElementById("download-button").removeAttribute("disabled"));
             }
         })
     }
@@ -367,7 +393,7 @@ class File extends React.Component {
                     <button type="button"
                             id="download-button"
                             className="download-button"
-                            onClick={() => this.handleDownload()}>Download File</button>
+                            onClick={() => this.handleDownload()}>{this.state.fileDownloadProgress ? `Downloading ${this.state.fileDownloadProgress}%`: "Download File"}</button>
                     <button type="button" id="delete-button" className="delete-button" onClick={() => {
                         this.props.addMessage("Deleting file...");
                         this.deleteFile(this.props.params.fileId, (err, res) => {

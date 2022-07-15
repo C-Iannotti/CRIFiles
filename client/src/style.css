@@ -133,8 +133,8 @@ body {
     background-color: #66023C;
     margin-top: 30px;
     padding: 10px;
-    width: 80%;
-    max-width: 600px;
+    width: 80vw;
+    max-width: 500px;
 }
 
 .file-container-header {

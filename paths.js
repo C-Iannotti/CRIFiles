@@ -384,6 +384,7 @@ function main(app, database) {
                         }
                         else {
                             res.setHeader("Content-Type", doc.metadata.mimetype);
+                            res.setHeader("Content-Length", doc.length);
                             fileBucket.openDownloadStream(MongoDB.ObjectId(req.body.fileId))
                                 .pipe(res);
                         }

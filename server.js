@@ -32,7 +32,7 @@ app.use(
         origin: process.env.WHITELISTED_DEV,
         methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
         credentials: true,
-        exposedHeaders: "Content-Disposition,Content-Type"
+        exposedHeaders: "Content-Disposition,Content-Type,Content-Length"
     })
 )
 
