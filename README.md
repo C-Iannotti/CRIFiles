@@ -1,24 +1,28 @@
 # FileSharingWebsite
 This project is being developed to learn more about web-based applications and web protocols. The goal
-of the project is to allow users to upload any format file and then allow certain or all users to
-download the file through a website link.
+of the project is to allow users to upload any format file and have certain or all users be able to
+access the file with three methods: by searching file's available to the user, by entering the file's URL
+without a token, and by entering the file's URL with a token.
 ## Details
-The application first lands on a home page, which allows the user to register or login by returning
-a cookie that is used for a period of time or until the user register or logins into another account.
-The user is redirected to the user's page, which allows them to upload a file or open and see on any
-files they have uploaded. When a file is opened, it redirects the user to the file's page, which
-would then download small files to a local database for the user to potentially view in an appropriate tag (if the user
-was given permission by the creator to access it). Otherwise, any locally stored file is deleted,
-and the user is redirected to their previous page. The user can click a button on the file's page
-to download the file to their download folder from either the local database or the server, depending
-on if the user already has a local copy.
+The application is divided into three separate pages, with a header displayed throughout the website.
+The first page is the Home page, which allows anyone to search for files they have access to and go
+to their page. The second page is the User page, which allows a user to search for files they have
+uploaded and either go to their page or delete them. It also allows them to upload a file along with
+privacy level, trusted users, and a comment. the privacy level can be public (anyone can access the file,
+even without an account), shared (anyone with access to a generated token can access the file), and
+private (only trusted users can access the file). The final page is the File page, which displays any
+file for those with access by providing the file's ID (and maybe a token). The File page allows the
+user who uploaded it to change the privacy level, update the trusted users, make a new comment, or
+generate a new token for sharing. The File page stores a local copy of small files for the user to
+view and allows the user to donwload any file size. The header has a login form, register form, and
+logout button to control who is signed in. The header also has buttons displayed as text to allow a
+user to go to the User page or Home page.
 ## Implementation
-This application uses Node to create both the front and back-end, and uses a .env file to instantiate
-variables (each variable seen in the code). After running npm install in both package.json areas,
-use npm run build in client folder to create React app and node server.js in the same directory
-as the server.js file.
+The application uses NodeJS and Express as the back-end and React with npm for the front-end. The
+application also uses a cloud MongoDB database for managing files. Two separate .dot env files are
+used to manage the variables for the front-end and the back-end (example files can be found as
+example.env, but should be renamed to .env). to use https protocol, localhost-key.pem and
+localhost.pem files are also placed in the root directory.
 ## Plan
 * Change home page to include information about the application
-* Add file searching to home page for users to find others' files
-* Change back-end to support https requests
 * Redesign website for useability and appearance
