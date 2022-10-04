@@ -26,10 +26,6 @@ example.env, but should be renamed to .env). to use https protocol, localhost-ke
 localhost.pem files are also placed in the root directory.
 ## Plan
 * Change home page to include information about the application
-<<<<<<< HEAD
 * Redesign website for useability and appearance
 * Move public website to AWS
-=======
 * Add OAuth methods
-* Redesign website for useability and appearance
->>>>>>> 25eaaab52aa8721ed757ca48a69a5c464a7477ff
