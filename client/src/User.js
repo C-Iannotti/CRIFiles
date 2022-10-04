@@ -352,6 +352,7 @@ class User extends React.Component {
                     <textarea type="text"
                         id="comment-input"
                         className="comment-input"
+                        placeholder="Enter a comment (optional)"
                         name="comment"
                         maxLength="500"
                         value={this.state.commentInput}

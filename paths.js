@@ -34,13 +34,22 @@ function main(app, database) {
             const displayname = req.body.displayname || "";
 
             if (!username.match(new RegExp(process.env.USERNAME_VERIFICATION))) {
-                res.status(400).json({ errorMessage: "Invalid username"});
+                if (!username.match(new RegExp("[A-Z][a-z]"))) res.status(400).json({ errorMessage: "Username needs to start with a letter" });
+                else if (username.match(new RegExp("/W"))) res.status(400).json({ errorMessage: "Invalid character in username" });
+                else if (username.length < 8 || username.length > 18) res.status(400).json({ errorMessage: "Username needs to be 8-18 characters"});
+                else res.status(400).json({ errorMessage: "Invalid username"});
             }
             else if (!password.match(new RegExp(process.env.PASSWORD_VERIFICATION))) {
-                res.status(400).json({ errorMessage: "Invalid password"});
+                if (!password.match(new RegExp("[A-Z]"))) res.status(400).json({ errorMessage: "Password needs to contain at least 1 uppercase" });
+                else if (!password.match(new RegExp("[a-z]"))) res.status(400).json({ errorMessage: "Password needs to contain at least 1 lowercase"});
+                else if (!password.match(new RegExp("[0-9]"))) res.status(400).json({ errorMessage: "Password needs to contain at least 1 number" });
+                else if (password.length < 4 || password.length > 16) res.status(400).json({ errorMessage: "Password needs to be 4-16 characters" });
+                else res.status(400).json({ errorMessage: "Invalid password"});
             }
             else if (!displayname.match(new RegExp(process.env.DISPLAYNAME_VERIFICATION))) {
-                res.status(400).json({ errorMessage: "Invalid displayname"});
+                if (!displayname.match(new RegExp("/W"))) res.status(400).json({ errorMessage: "Invalid character in display name" });
+                else if (displayname.length > 18) res.status(400).json({ errorMessage: "Display name needs to be 18 characters or less" });
+                else res.status(400).json({ errorMessage: "Invalid displayname"});
             }
             else {
                 userCollection.findOne({

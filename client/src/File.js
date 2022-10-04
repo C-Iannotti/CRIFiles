@@ -377,6 +377,7 @@ class File extends React.Component {
                         className="comment-input"
                         name="comment"
                         maxLength="500"
+                        placeholder="Enter a comment (optional)"
                         value={this.state.commentInput || ""}
                         onChange={e => this.setState({ commentInput: e.target.value })}
                         ></textarea>

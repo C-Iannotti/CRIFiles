@@ -27,3 +27,4 @@ localhost.pem files are also placed in the root directory.
 ## Plan
 * Change home page to include information about the application
 * Redesign website for useability and appearance
+* Move public website to AWS
