@@ -3,7 +3,7 @@ This project is being developed to learn more about web-based applications and w
 of the project is to allow users to upload any format file and have certain or all users be able to
 access the file with three methods: by searching file's available to the user, by entering the file's URL
 without a token, and by entering the file's URL with a token.
-* https://ci-file-sharing-website.herokuapp.com
+* https://www.ciannotfiles.xyz:444/ (444 is necessary unless using http protocol)
 ## Details
 The application is divided into three separate pages, with a header displayed throughout the website.
 The first page is the Home page, which allows anyone to search for files they have access to and go
@@ -27,5 +27,4 @@ localhost.pem files are also placed in the root directory.
 ## Plan
 * Change home page to include information about the application
 * Redesign website for useability and appearance
-* Move public website to AWS
 * Add OAuth methods
