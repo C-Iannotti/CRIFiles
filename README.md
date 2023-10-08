@@ -3,7 +3,7 @@ This project is being developed to learn more about web-based applications and w
 of the project is to allow users to upload any format file and have certain or all users be able to
 access the file with three methods: by searching file's available to the user, by entering the file's URL
 without a token, and by entering the file's URL with a token.
-* https://www.ciannotfiles.xyz:444/ (444 is necessary unless using http protocol)
+* https://www.ciannotfiles.xyz
 ## Details
 The application is divided into three separate pages, with a header displayed throughout the website.
 The first page is the Home page, which allows anyone to search for files they have access to and go
